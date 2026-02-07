@@ -200,7 +200,15 @@ export function SessionForm({ clubId, initialData, sessionId }: SessionFormProps
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form
+      onSubmit={handleSubmit}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" && (e.target as HTMLElement).tagName !== "TEXTAREA") {
+          e.preventDefault();
+        }
+      }}
+      className="space-y-6"
+    >
       {/* 책 선택 */}
       <div className="space-y-2">
         <Label>읽은 책</Label>
@@ -323,19 +331,30 @@ export function SessionForm({ clubId, initialData, sessionId }: SessionFormProps
           </div>
         )}
         <div className="relative">
-          <Input
-            placeholder="참여자 이름 입력 후 Enter"
-            value={participantInput}
-            onChange={(e) => setParticipantInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                addParticipant(participantInput);
-              }
-            }}
-            className="bg-input h-12 border-0"
-            autoComplete="off"
-          />
+          <div className="flex gap-2">
+            <Input
+              placeholder="참여자 이름 입력"
+              value={participantInput}
+              onChange={(e) => setParticipantInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  addParticipant(participantInput);
+                }
+              }}
+              className="bg-input h-12 flex-1 border-0"
+              autoComplete="off"
+            />
+            <Button
+              type="button"
+              variant="secondary"
+              className="h-12 shrink-0 rounded-[14px] px-4"
+              onClick={() => addParticipant(participantInput)}
+              disabled={!participantInput.trim()}
+            >
+              추가
+            </Button>
+          </div>
           {participantInput && filteredMembers.length > 0 && (
             <div className="bg-popover absolute top-full z-10 mt-1 w-full rounded-[14px] border p-1 shadow-lg">
               {filteredMembers.slice(0, 5).map((m) => (
@@ -431,7 +450,7 @@ export function SessionForm({ clubId, initialData, sessionId }: SessionFormProps
               accept="image/*"
               multiple
               onChange={handlePhotoSelect}
-              className="hidden"
+              className="sr-only"
             />
           </label>
         )}

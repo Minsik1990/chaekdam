@@ -80,7 +80,7 @@ export function PhotoUploader({ clubId, sessionId, initialPhotos }: PhotoUploade
               multiple
               onChange={handleUpload}
               disabled={uploading}
-              className="hidden"
+              className="sr-only"
             />
           </label>
         )}

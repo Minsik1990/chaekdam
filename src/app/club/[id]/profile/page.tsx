@@ -1,5 +1,7 @@
+import Image from "next/image";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { BookOpen, Calendar, Users, Mic, UserCheck } from "lucide-react";
+import { BookOpen, Calendar, Users, Mic, UserCheck, ImageIcon } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PresenterChart } from "@/components/features/presenter-chart";
@@ -23,7 +25,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
   // 세션 목록 (통계용)
   const { data: sessions } = await supabase
     .from("club_sessions")
-    .select("id, session_date, presenter, participants, book_id")
+    .select("id, session_date, presenter, participants, book_id, photos")
     .eq("club_id", clubId)
     .order("session_date", { ascending: false });
 
@@ -68,6 +70,15 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
   const memberStats = Array.from(participationCount.entries())
     .map(([name, count]) => ({ name, count }))
     .sort((a, b) => b.count - a.count);
+
+  // 전체 사진 수집 (최근 세션 순, 세션 ID 포함)
+  const allPhotos: { url: string; sessionId: string }[] = [];
+  for (const s of allSessions) {
+    const photos = (s.photos as string[] | null) ?? [];
+    for (const url of photos) {
+      allPhotos.push({ url, sessionId: s.id });
+    }
+  }
 
   // 첫 모임, 마지막 모임 날짜
   const firstDate =
@@ -136,6 +147,39 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
           </CardContent>
         </Card>
       )}
+
+      {/* 모임 사진 */}
+      <Card className="rounded-[20px]">
+        <CardContent className="pt-6">
+          <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold">
+            <ImageIcon className="text-primary h-4 w-4" />
+            모임 사진 {allPhotos.length > 0 && `(${allPhotos.length})`}
+          </h3>
+          {allPhotos.length > 0 ? (
+            <div className="grid grid-cols-3 gap-2">
+              {allPhotos.slice(0, 12).map((photo, i) => (
+                <Link
+                  key={i}
+                  href={`/club/${clubId}/session/${photo.sessionId}`}
+                  className="relative aspect-square overflow-hidden rounded-lg"
+                >
+                  <Image
+                    src={photo.url}
+                    alt={`모임 사진 ${i + 1}`}
+                    fill
+                    sizes="(max-width: 480px) 33vw, 120px"
+                    className="object-cover"
+                  />
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <p className="text-muted-foreground py-4 text-center text-sm">
+              아직 모임 사진이 없습니다. 세션 상세에서 사진을 추가해보세요!
+            </p>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
