@@ -47,6 +47,8 @@ export function SessionForm({ clubId, initialData, sessionId }: SessionFormProps
       new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().split("T")[0]
   );
   const [presenter, setPresenter] = useState(initialData?.presenter ?? "");
+  const [presenterInput, setPresenterInput] = useState("");
+  const presenterValueRef = useRef("");
   const [participants, setParticipants] = useState<string[]>(initialData?.participants ?? []);
   const [participantInput, setParticipantInput] = useState("");
   const participantValueRef = useRef("");
@@ -59,7 +61,6 @@ export function SessionForm({ clubId, initialData, sessionId }: SessionFormProps
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [members, setMembers] = useState<string[]>([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
 
   const loadMembers = useCallback(async () => {
     try {
@@ -75,6 +76,17 @@ export function SessionForm({ clubId, initialData, sessionId }: SessionFormProps
     loadMembers();
   }, [loadMembers]);
 
+  function setPresenterSafe() {
+    setTimeout(() => {
+      const val = presenterValueRef.current.trim();
+      if (val) {
+        setPresenter(val);
+        setPresenterInput("");
+        presenterValueRef.current = "";
+      }
+    }, 30);
+  }
+
   function addParticipant(name: string) {
     const trimmed = name.trim();
     if (trimmed && !participants.includes(trimmed)) {
@@ -82,7 +94,6 @@ export function SessionForm({ clubId, initialData, sessionId }: SessionFormProps
     }
     setParticipantInput("");
     participantValueRef.current = "";
-    setShowSuggestions(false);
   }
 
   // IME 조합 완료 후 안전하게 추가 (한국어 입력 대응)
@@ -283,46 +294,86 @@ export function SessionForm({ clubId, initialData, sessionId }: SessionFormProps
 
       {/* 발제자 */}
       <div className="space-y-2">
-        <Label htmlFor="presenter">발제자</Label>
-        <div className="relative">
-          <Input
-            id="presenter"
-            placeholder="발제자 이름"
-            value={presenter}
-            onChange={(e) => setPresenter(e.target.value)}
-            className="bg-input h-12 border-0"
-            autoComplete="off"
-            onFocus={() => setShowSuggestions(true)}
-            onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-          />
-          {showSuggestions &&
-            presenter &&
-            members.filter(
-              (m) => m.toLowerCase().includes(presenter.toLowerCase()) && m !== presenter
-            ).length > 0 && (
-              <div className="bg-popover absolute top-full z-10 mt-1 w-full rounded-[14px] border p-1 shadow-lg">
-                {members
-                  .filter(
-                    (m) => m.toLowerCase().includes(presenter.toLowerCase()) && m !== presenter
-                  )
-                  .slice(0, 5)
-                  .map((m) => (
-                    <button
-                      key={m}
-                      type="button"
-                      className="hover:bg-muted w-full rounded-lg px-3 py-2 text-left text-sm"
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        setPresenter(m);
-                        setShowSuggestions(false);
-                      }}
-                    >
-                      {m}
-                    </button>
-                  ))}
-              </div>
-            )}
-        </div>
+        <Label>발제자</Label>
+        {presenter ? (
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary" className="gap-1 rounded-full py-1.5 pr-1.5 pl-3 text-sm">
+              {presenter}
+              <button
+                type="button"
+                onClick={() => setPresenter("")}
+                className="hover:bg-muted rounded-full p-0.5"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          </div>
+        ) : (
+          <div className="relative">
+            <div className="flex gap-2">
+              <Input
+                placeholder="발제자 이름 입력"
+                value={presenterInput}
+                onChange={(e) => {
+                  setPresenterInput(e.target.value);
+                  presenterValueRef.current = e.target.value;
+                }}
+                onCompositionEnd={(e) => {
+                  const val = (e.target as HTMLInputElement).value;
+                  setPresenterInput(val);
+                  presenterValueRef.current = val;
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+                    e.preventDefault();
+                    setPresenterSafe();
+                  }
+                }}
+                className="bg-input h-12 flex-1 border-0"
+                autoComplete="off"
+              />
+              <Button
+                type="button"
+                variant="secondary"
+                className="h-12 shrink-0 rounded-[14px] px-4"
+                onClick={setPresenterSafe}
+                disabled={!presenterInput.trim()}
+              >
+                선택
+              </Button>
+            </div>
+            {presenterInput &&
+              members.filter(
+                (m) =>
+                  m.toLowerCase().includes(presenterInput.toLowerCase()) && m !== presenterInput
+              ).length > 0 && (
+                <div className="bg-popover absolute top-full z-10 mt-1 w-full rounded-[14px] border p-1 shadow-lg">
+                  {members
+                    .filter(
+                      (m) =>
+                        m.toLowerCase().includes(presenterInput.toLowerCase()) &&
+                        m !== presenterInput
+                    )
+                    .slice(0, 5)
+                    .map((m) => (
+                      <button
+                        key={m}
+                        type="button"
+                        className="hover:bg-muted w-full rounded-lg px-3 py-2 text-left text-sm"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          setPresenter(m);
+                          setPresenterInput("");
+                          presenterValueRef.current = "";
+                        }}
+                      >
+                        {m}
+                      </button>
+                    ))}
+                </div>
+              )}
+          </div>
+        )}
       </div>
 
       {/* 참여자 */}
