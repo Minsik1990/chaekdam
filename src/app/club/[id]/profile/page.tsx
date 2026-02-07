@@ -72,12 +72,12 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
     .map(([name, count]) => ({ name, count }))
     .sort((a, b) => b.count - a.count);
 
-  // 전체 사진 수집 (모임 순서 = 오래된 순)
+  // 전체 사진 수집 (최신 세션 먼저 = 갤러리와 동일)
   const allPhotos: { url: string; sessionId: string; sessionOrder: number }[] = [];
-  for (let i = allSessions.length - 1; i >= 0; i--) {
+  for (let i = 0; i < allSessions.length; i++) {
     const s = allSessions[i];
     const photos = (s.photos as string[] | null) ?? [];
-    const order = allSessions.length - i; // 1회, 2회, ...
+    const order = allSessions.length - i; // 회차 번호 (1회, 2회, ...)
     for (const url of photos) {
       allPhotos.push({ url, sessionId: s.id, sessionOrder: order });
     }
