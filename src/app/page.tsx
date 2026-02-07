@@ -16,6 +16,7 @@ interface RecentClub {
 
 export default function HomePage() {
   const router = useRouter();
+  const [clubName, setClubName] = useState("");
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -34,7 +35,7 @@ export default function HomePage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!code.trim()) return;
+    if (!clubName.trim() || !code.trim()) return;
 
     setLoading(true);
     setError("");
@@ -43,7 +44,7 @@ export default function HomePage() {
       const res = await fetch("/api/club/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ accessCode: code.trim() }),
+        body: JSON.stringify({ clubName: clubName.trim(), accessCode: code.trim() }),
       });
 
       const data = await res.json();
@@ -74,6 +75,7 @@ export default function HomePage() {
   }
 
   function handleRecentClick(club: RecentClub) {
+    setClubName(club.clubName);
     setCode(club.code);
     // 자동 제출
     setLoading(true);
@@ -82,7 +84,7 @@ export default function HomePage() {
     fetch("/api/club/verify", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ accessCode: club.code }),
+      body: JSON.stringify({ clubName: club.clubName, accessCode: club.code }),
     })
       .then(async (res) => {
         const data = await res.json();
@@ -108,26 +110,36 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* 접속 코드 입력 */}
+        {/* 접속 입력 */}
         <Card className="rounded-[20px]">
           <CardContent className="space-y-4 pt-6">
             <form onSubmit={handleSubmit} className="space-y-3">
               <Input
-                placeholder="접속 코드를 입력하세요"
-                value={code}
+                placeholder="모임 이름"
+                value={clubName}
                 onChange={(e) => {
-                  setCode(e.target.value);
+                  setClubName(e.target.value);
                   setError("");
                 }}
                 className="h-12 text-center text-lg"
                 autoFocus
                 disabled={loading}
               />
+              <Input
+                placeholder="접속 코드"
+                value={code}
+                onChange={(e) => {
+                  setCode(e.target.value);
+                  setError("");
+                }}
+                className="h-12 text-center text-lg"
+                disabled={loading}
+              />
               {error && <p className="text-destructive text-center text-sm">{error}</p>}
               <Button
                 type="submit"
                 className="h-12 w-full rounded-[14px]"
-                disabled={!code.trim() || loading}
+                disabled={!clubName.trim() || !code.trim() || loading}
               >
                 {loading ? "접속 중..." : "입장하기"}
               </Button>

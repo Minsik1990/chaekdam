@@ -30,6 +30,11 @@ export async function POST(request: NextRequest) {
 
   const body = await request.json();
   const accessCode = body.accessCode?.trim();
+  const clubName = body.clubName?.trim();
+
+  if (!clubName) {
+    return NextResponse.json({ error: "모임 이름을 입력해주세요." }, { status: 400 });
+  }
 
   if (!accessCode) {
     return NextResponse.json({ error: "접속 코드를 입력해주세요." }, { status: 400 });
@@ -39,6 +44,7 @@ export async function POST(request: NextRequest) {
   const { data: club, error } = await supabase
     .from("clubs")
     .select("id, name")
+    .eq("name", clubName)
     .eq("access_code", accessCode)
     .maybeSingle();
 
@@ -48,7 +54,10 @@ export async function POST(request: NextRequest) {
   }
 
   if (!club) {
-    return NextResponse.json({ error: "존재하지 않는 접속 코드입니다." }, { status: 404 });
+    return NextResponse.json(
+      { error: "모임 이름 또는 접속 코드가 일치하지 않습니다." },
+      { status: 404 }
+    );
   }
 
   // 쿠키에 club_id 설정
