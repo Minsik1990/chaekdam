@@ -67,7 +67,7 @@ export default function AdminNewPage() {
       const verifyRes = await fetch("/api/club/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ accessCode: accessCode.trim() }),
+        body: JSON.stringify({ clubName: name.trim(), accessCode: accessCode.trim() }),
       });
 
       if (verifyRes.ok) {

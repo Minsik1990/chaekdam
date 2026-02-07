@@ -14,31 +14,20 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
   const { id: clubId } = await params;
   const supabase = createClient();
 
-  // 모임 정보
-  const { data: clubData } = await supabase
-    .from("clubs")
-    .select("*")
-    .eq("id", clubId)
-    .maybeSingle();
+  // 모임 정보 + 세션 + 멤버 병렬 조회
+  const [clubResult, sessionsResult, membersResult] = await Promise.all([
+    supabase.from("clubs").select("*").eq("id", clubId).maybeSingle(),
+    supabase
+      .from("club_sessions")
+      .select("id, session_date, presenter, participants, book_id, photos")
+      .eq("club_id", clubId)
+      .order("session_date", { ascending: false }),
+    supabase.from("members").select("name").eq("club_id", clubId).order("name"),
+  ]);
 
-  const club = clubData as Club | null;
-
-  // 세션 목록 (통계용)
-  const { data: sessions } = await supabase
-    .from("club_sessions")
-    .select("id, session_date, presenter, participants, book_id, photos")
-    .eq("club_id", clubId)
-    .order("session_date", { ascending: false });
-
-  const allSessions = sessions ?? [];
-
-  // 멤버 목록
-  const { data: membersData } = await supabase
-    .from("members")
-    .select("name")
-    .eq("club_id", clubId)
-    .order("name");
-  const memberNames = (membersData ?? []).map((m) => m.name);
+  const club = clubResult.data as Club | null;
+  const allSessions = sessionsResult.data ?? [];
+  const memberNames = (membersResult.data ?? []).map((m) => m.name);
 
   // 통계 계산
   const totalSessions = allSessions.length;
