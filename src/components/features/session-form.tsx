@@ -77,14 +77,15 @@ export function SessionForm({ clubId, initialData, sessionId }: SessionFormProps
   }, [loadMembers]);
 
   function setPresenterSafe() {
+    // IME 조합이 끝나기를 기다린 후 안전하게 값 읽기
     setTimeout(() => {
-      const val = presenterValueRef.current.trim();
+      const val = presenterValueRef.current.trim() || presenterInput.trim();
       if (val) {
         setPresenter(val);
         setPresenterInput("");
         presenterValueRef.current = "";
       }
-    }, 30);
+    }, 50);
   }
 
   function addParticipant(name: string) {
@@ -99,11 +100,11 @@ export function SessionForm({ clubId, initialData, sessionId }: SessionFormProps
   // IME 조합 완료 후 안전하게 추가 (한국어 입력 대응)
   function addParticipantSafe() {
     setTimeout(() => {
-      const val = participantValueRef.current.trim();
+      const val = participantValueRef.current.trim() || participantInput.trim();
       if (val) {
         addParticipant(val);
       }
-    }, 30);
+    }, 50);
   }
 
   function removeParticipant(name: string) {
@@ -360,8 +361,8 @@ export function SessionForm({ clubId, initialData, sessionId }: SessionFormProps
                         key={m}
                         type="button"
                         className="hover:bg-muted w-full rounded-lg px-3 py-2 text-left text-sm"
-                        onMouseDown={(e) => {
-                          e.preventDefault();
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => {
                           setPresenter(m);
                           setPresenterInput("");
                           presenterValueRef.current = "";
@@ -435,10 +436,8 @@ export function SessionForm({ clubId, initialData, sessionId }: SessionFormProps
                   key={m}
                   type="button"
                   className="hover:bg-muted w-full rounded-lg px-3 py-2 text-left text-sm"
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    addParticipant(m);
-                  }}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => addParticipant(m)}
                 >
                   {m}
                 </button>
