@@ -2,13 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Search, PlusCircle, Users, User } from "lucide-react";
+import { Home, Search, Bot, Users, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
   { href: "/", icon: Home, label: "홈" },
   { href: "/search", icon: Search, label: "검색" },
-  { href: "/record/new", icon: PlusCircle, label: "기록" },
+  { href: "/chat", icon: Bot, label: "AI 대화" },
   { href: "/groups", icon: Users, label: "모임" },
   { href: "/profile", icon: User, label: "프로필" },
 ] as const;
@@ -34,7 +34,7 @@ export function BottomNav() {
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
-              <Icon className={cn("h-5 w-5", href === "/record/new" && "text-primary h-6 w-6")} />
+              <Icon className={cn("h-5 w-5", href === "/chat" && "text-primary h-6 w-6")} />
               <span>{label}</span>
               {isActive && (
                 <span className="bg-primary absolute -bottom-0.5 h-1 w-1 rounded-full" />

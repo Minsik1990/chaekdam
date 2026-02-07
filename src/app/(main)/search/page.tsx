@@ -86,26 +86,32 @@ export default function SearchPage() {
             <button
               key={book.isbn}
               type="button"
-              className="hover:bg-muted flex w-full items-start gap-3 rounded-[14px] p-3 text-left transition-colors"
+              className="hover:bg-muted flex w-full items-start gap-4 rounded-[14px] p-3 text-left transition-colors"
               onClick={() => handleSelect(book)}
             >
               {book.coverUrl ? (
                 <Image
                   src={book.coverUrl}
                   alt={book.title}
-                  width={48}
-                  height={64}
-                  className="h-16 w-12 flex-shrink-0 rounded object-cover"
+                  width={64}
+                  height={96}
+                  className="h-24 w-16 flex-shrink-0 rounded-lg object-cover shadow-sm"
                 />
               ) : (
-                <div className="bg-muted flex h-16 w-12 flex-shrink-0 items-center justify-center rounded">
-                  <BookOpen className="text-muted-foreground h-4 w-4" />
+                <div className="bg-muted flex h-24 w-16 flex-shrink-0 items-center justify-center rounded-lg">
+                  <BookOpen className="text-muted-foreground h-5 w-5" />
                 </div>
               )}
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium">{book.title}</p>
-                <p className="text-muted-foreground truncate text-xs">{book.author}</p>
-                <p className="text-muted-foreground text-xs">{book.publisher}</p>
+                <p className="text-[15px] font-semibold">{book.title}</p>
+                <p className="text-muted-foreground mt-0.5 text-[13px]">
+                  {book.author} · {book.publisher}
+                </p>
+                {book.description && (
+                  <p className="text-muted-foreground mt-1.5 line-clamp-2 text-[13px] leading-relaxed">
+                    {book.description}
+                  </p>
+                )}
               </div>
             </button>
           ))}

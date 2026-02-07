@@ -1,4 +1,6 @@
-import { BookOpen } from "lucide-react";
+import Link from "next/link";
+import { BookOpen, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
 import { RecordCard } from "@/components/features/record-card";
 import { EmptyState } from "@/components/features/empty-state";
@@ -28,15 +30,22 @@ export default async function HomePage() {
   return (
     <div className="space-y-6">
       {/* 환영 섹션 */}
-      <section>
-        <h1 className="text-[22px] leading-tight font-bold">
-          {profile?.nickname ?? "독서가"}님의 기록
-        </h1>
-        <p className="text-muted-foreground mt-1 text-[15px]">
-          {completedCount > 0
-            ? `${completedCount}권 완독, ${readingCount}권 읽는 중`
-            : "첫 번째 기록을 남겨보세요"}
-        </p>
+      <section className="flex items-start justify-between">
+        <div>
+          <h1 className="text-[22px] leading-tight font-bold">
+            {profile?.nickname ?? "독서가"}님의 기록
+          </h1>
+          <p className="text-muted-foreground mt-1 text-[15px]">
+            {completedCount > 0
+              ? `${completedCount}권 완독, ${readingCount}권 읽는 중`
+              : "첫 번째 기록을 남겨보세요"}
+          </p>
+        </div>
+        <Button asChild size="sm">
+          <Link href="/record/new">
+            <Plus className="mr-1 h-4 w-4" />새 기록
+          </Link>
+        </Button>
       </section>
 
       {/* 독서 기록 타임라인 */}
@@ -44,7 +53,7 @@ export default async function HomePage() {
         <EmptyState
           icon={BookOpen}
           title="아직 기록이 없어요"
-          description="하단의 + 버튼으로 첫 번째 독서 기록을 남겨보세요"
+          description="상단의 '새 기록' 버튼으로 첫 번째 독서 기록을 남겨보세요"
         />
       ) : (
         <div className="space-y-3 md:grid md:grid-cols-2 md:gap-4 md:space-y-0">
