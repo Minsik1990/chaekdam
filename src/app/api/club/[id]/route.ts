@@ -66,14 +66,35 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({ error: "관리자 비밀번호가 일치하지 않습니다." }, { status: 403 });
   }
 
+  // 접속 코드 변경 시 중복 체크
+  const { accessCode } = body;
+  if (accessCode !== undefined) {
+    const trimmed = (accessCode as string).trim();
+    if (trimmed.length < 2) {
+      return NextResponse.json({ error: "접속 코드는 2자 이상이어야 합니다." }, { status: 400 });
+    }
+    const { data: existing } = await supabase
+      .from("clubs")
+      .select("id")
+      .eq("access_code", trimmed)
+      .neq("id", clubId)
+      .maybeSingle();
+    if (existing) {
+      return NextResponse.json({ error: "이미 사용 중인 접속 코드입니다." }, { status: 409 });
+    }
+  }
+
   // 업데이트
+  const updateData: Record<string, unknown> = {
+    updated_at: new Date().toISOString(),
+  };
+  if (name) updateData.name = name;
+  if (description !== undefined) updateData.description = description ?? null;
+  if (accessCode !== undefined) updateData.access_code = (accessCode as string).trim();
+
   const { data: updated, error } = await supabase
     .from("clubs")
-    .update({
-      name: name || undefined,
-      description: description ?? null,
-      updated_at: new Date().toISOString(),
-    })
+    .update(updateData)
     .eq("id", clubId)
     .select("id, name, description, access_code, cover_image_url")
     .single();
@@ -83,4 +104,56 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   }
 
   return NextResponse.json({ club: updated });
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id: clubId } = await params;
+
+  // 쿠키 검증
+  const cookieClubId = request.cookies.get("club_id")?.value;
+  if (!cookieClubId || cookieClubId !== clubId) {
+    return NextResponse.json({ error: "권한이 없습니다." }, { status: 403 });
+  }
+
+  const body = await request.json();
+  const { adminPassword } = body;
+
+  if (!adminPassword) {
+    return NextResponse.json({ error: "관리자 비밀번호가 필요합니다." }, { status: 400 });
+  }
+
+  const supabase = createClient();
+
+  const { data: club } = await supabase
+    .from("clubs")
+    .select("admin_password_hash")
+    .eq("id", clubId)
+    .maybeSingle();
+
+  if (!club) {
+    return NextResponse.json({ error: "모임을 찾을 수 없습니다." }, { status: 404 });
+  }
+
+  const bcrypt = await import("bcryptjs");
+  const valid = await bcrypt.compare(adminPassword, club.admin_password_hash);
+  if (!valid) {
+    return NextResponse.json({ error: "관리자 비밀번호가 일치하지 않습니다." }, { status: 403 });
+  }
+
+  // CASCADE로 members, club_sessions(→session_comments) 자동 삭제
+  const { error } = await supabase.from("clubs").delete().eq("id", clubId);
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  // 쿠키 제거
+  const response = NextResponse.json({ success: true });
+  response.cookies.set("club_id", "", { maxAge: 0, path: "/" });
+  response.cookies.set("club_name", "", { maxAge: 0, path: "/" });
+
+  return response;
 }

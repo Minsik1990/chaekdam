@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Settings, Copy, Check, LogOut } from "lucide-react";
+import { Settings, Copy, Check, LogOut, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,8 +23,13 @@ export default function SettingsPage() {
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState("");
   const [editDescription, setEditDescription] = useState("");
+  const [editAccessCode, setEditAccessCode] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
 
   useEffect(() => {
     fetch(`/api/club/${clubId}`)
@@ -34,6 +39,7 @@ export default function SettingsPage() {
           setClub(data.club);
           setEditName(data.club.name);
           setEditDescription(data.club.description ?? "");
+          setEditAccessCode(data.club.access_code);
         }
       })
       .catch(() => {});
@@ -63,6 +69,7 @@ export default function SettingsPage() {
         body: JSON.stringify({
           name: editName,
           description: editDescription,
+          accessCode: editAccessCode,
           adminPassword,
         }),
       });
@@ -75,6 +82,7 @@ export default function SettingsPage() {
       }
 
       setClub(data.club);
+      setEditAccessCode(data.club.access_code);
       setEditing(false);
       setAdminPassword("");
       router.refresh();
@@ -82,6 +90,37 @@ export default function SettingsPage() {
       setError("네트워크 오류가 발생했습니다.");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!deletePassword.trim()) {
+      setDeleteError("관리자 비밀번호를 입력하세요.");
+      return;
+    }
+
+    setDeleting(true);
+    setDeleteError("");
+
+    try {
+      const res = await fetch(`/api/club/${clubId}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ adminPassword: deletePassword }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setDeleteError(data.error || "삭제에 실패했습니다.");
+        return;
+      }
+
+      router.push("/");
+    } catch {
+      setDeleteError("네트워크 오류가 발생했습니다.");
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -121,7 +160,8 @@ export default function SettingsPage() {
             </Button>
           </div>
           <p className="text-muted-foreground text-xs">
-            이 코드를 공유하면 누구나 모임에 접속할 수 있어요
+            이 코드를 공유하면 누구나 모임에 접속할 수 있어요. 수정은 아래 모임 정보 수정에서
+            가능합니다.
           </p>
         </CardContent>
       </Card>
@@ -168,6 +208,18 @@ export default function SettingsPage() {
                 />
               </div>
               <div className="space-y-1.5">
+                <Label htmlFor="editCode" className="text-xs">
+                  접속 코드
+                </Label>
+                <Input
+                  id="editCode"
+                  value={editAccessCode}
+                  onChange={(e) => setEditAccessCode(e.target.value)}
+                  className="bg-input h-12 border-0"
+                  placeholder="2자 이상"
+                />
+              </div>
+              <div className="space-y-1.5">
                 <Label htmlFor="adminPw" className="text-xs">
                   관리자 비밀번호
                 </Label>
@@ -200,6 +252,7 @@ export default function SettingsPage() {
                     setError("");
                     setEditName(club.name);
                     setEditDescription(club.description ?? "");
+                    setEditAccessCode(club.access_code);
                   }}
                   className="h-10 rounded-[14px]"
                 >
@@ -216,15 +269,72 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
-      {/* 나가기 */}
-      <Button
-        variant="outline"
-        className="text-muted-foreground h-12 w-full rounded-[14px]"
-        onClick={handleLeave}
-      >
-        <LogOut className="mr-2 h-4 w-4" />
-        모임에서 나가기
-      </Button>
+      {/* 위험 영역 */}
+      <Card className="rounded-[20px] border-red-200">
+        <CardContent className="space-y-3 pt-6">
+          <Label className="text-destructive">위험 영역</Label>
+
+          {/* 나가기 */}
+          <Button
+            variant="outline"
+            className="text-muted-foreground h-12 w-full rounded-[14px]"
+            onClick={handleLeave}
+          >
+            <LogOut className="mr-2 h-4 w-4" />
+            모임에서 나가기
+          </Button>
+
+          {/* 모임 삭제 */}
+          {!showDeleteConfirm ? (
+            <Button
+              variant="outline"
+              className="text-destructive border-destructive/30 h-12 w-full rounded-[14px]"
+              onClick={() => setShowDeleteConfirm(true)}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              모임 삭제
+            </Button>
+          ) : (
+            <div className="space-y-3 rounded-[14px] border border-red-200 bg-red-50 p-4">
+              <p className="text-sm font-medium text-red-800">
+                모임을 삭제하면 모든 세션, 멤버, 사진이 영구 삭제됩니다.
+              </p>
+              <Input
+                type="password"
+                value={deletePassword}
+                onChange={(e) => {
+                  setDeletePassword(e.target.value);
+                  setDeleteError("");
+                }}
+                className="h-12 border-0 bg-white"
+                placeholder="관리자 비밀번호 입력"
+              />
+              {deleteError && <p className="text-destructive text-sm">{deleteError}</p>}
+              <div className="flex gap-2">
+                <Button
+                  variant="destructive"
+                  onClick={handleDelete}
+                  disabled={deleting || !deletePassword.trim()}
+                  className="h-10 flex-1 rounded-[14px]"
+                >
+                  {deleting ? "삭제 중..." : "영구 삭제"}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowDeleteConfirm(false);
+                    setDeletePassword("");
+                    setDeleteError("");
+                  }}
+                  className="h-10 rounded-[14px]"
+                >
+                  취소
+                </Button>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
