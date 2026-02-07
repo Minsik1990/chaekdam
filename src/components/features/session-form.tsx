@@ -44,7 +44,9 @@ export function SessionForm({ clubId, initialData, sessionId }: SessionFormProps
   const [book, setBook] = useState<BookInfo | null>(initialData?.book ?? null);
   const [sessionDate, setSessionDate] = useState(
     initialData?.sessionDate ??
-      new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().split("T")[0]
+      new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" }))
+        .toISOString()
+        .split("T")[0]
   );
   const [presenter, setPresenter] = useState(initialData?.presenter ?? "");
   const [presenterInput, setPresenterInput] = useState("");
