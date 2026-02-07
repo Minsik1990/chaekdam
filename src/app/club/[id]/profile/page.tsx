@@ -5,6 +5,7 @@ import { BookOpen, Calendar, Users, Mic, UserCheck, ImageIcon } from "lucide-rea
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ClubCoverUploader } from "@/components/features/club-cover-uploader";
+import { MemberManager } from "@/components/features/member-manager";
 import type { Database } from "@/lib/supabase/database.types";
 
 type Club = Database["public"]["Tables"]["clubs"]["Row"];
@@ -31,19 +32,20 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
 
   const allSessions = sessions ?? [];
 
+  // 멤버 목록
+  const { data: membersData } = await supabase
+    .from("members")
+    .select("name")
+    .eq("club_id", clubId)
+    .order("name");
+  const memberNames = (membersData ?? []).map((m) => m.name);
+
   // 통계 계산
   const totalSessions = allSessions.length;
   const uniqueBookIds = new Set(allSessions.map((s) => s.book_id).filter(Boolean));
   const totalBooks = uniqueBookIds.size;
 
-  // 전체 참여자 수 (유니크)
-  const allNames = new Set<string>();
-  for (const s of allSessions) {
-    const pres = (s.presenter as string[] | null) ?? [];
-    for (const p of pres) allNames.add(p);
-    if (s.participants) s.participants.forEach((p: string) => allNames.add(p));
-  }
-  const totalMembers = allNames.size;
+  const totalMembers = memberNames.length;
 
   // 발제자 통계
   const presenterCount = new Map<string, number>();
@@ -70,12 +72,14 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
     .map(([name, count]) => ({ name, count }))
     .sort((a, b) => b.count - a.count);
 
-  // 전체 사진 수집 (최근 세션 순, 세션 ID 포함)
-  const allPhotos: { url: string; sessionId: string }[] = [];
-  for (const s of allSessions) {
+  // 전체 사진 수집 (모임 순서 = 오래된 순)
+  const allPhotos: { url: string; sessionId: string; sessionOrder: number }[] = [];
+  for (let i = allSessions.length - 1; i >= 0; i--) {
+    const s = allSessions[i];
     const photos = (s.photos as string[] | null) ?? [];
+    const order = allSessions.length - i; // 1회, 2회, ...
     for (const url of photos) {
-      allPhotos.push({ url, sessionId: s.id });
+      allPhotos.push({ url, sessionId: s.id, sessionOrder: order });
     }
   }
 
@@ -110,6 +114,17 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
         <StatCard icon={BookOpen} label="읽은 책" value={totalBooks} unit="권" />
         <StatCard icon={Users} label="멤버" value={totalMembers} unit="명" />
       </div>
+
+      {/* 지금 함께하는 사람 */}
+      <Card className="rounded-[20px]">
+        <CardContent className="pt-6">
+          <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold">
+            <Users className="text-primary h-4 w-4" />
+            지금 함께하는 사람
+          </h3>
+          <MemberManager clubId={clubId} initialMembers={memberNames} />
+        </CardContent>
+      </Card>
 
       {/* 멤버 참여 현황 */}
       {memberStats.length > 0 && (
@@ -188,6 +203,9 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
                     sizes="(max-width: 480px) 33vw, 120px"
                     className="object-cover"
                   />
+                  <span className="absolute right-1 bottom-1 rounded-full bg-black/50 px-1.5 py-0.5 text-[10px] font-medium text-white">
+                    #{photo.sessionOrder}
+                  </span>
                 </Link>
               ))}
             </div>
