@@ -10,9 +10,8 @@ const pretendard = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "밍들 - 작고 둥근 독서 모임",
-  description:
-    "독서 모임원들이 모임 내용을 보고, 후기를 남기고, 발제문을 공유하며 추억할 수 있는 웹앱",
+  title: "밍들 — 나의 독서 기록",
+  description: "읽고, 느끼고, 기록하다. 나만의 독서 기록과 독서 모임을 위한 웹앱",
 };
 
 export default function RootLayout({

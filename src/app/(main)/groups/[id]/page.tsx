@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { Plus, Calendar, BookOpen, ChevronRight } from "lucide-react";
+import { Plus, Calendar, BookOpen, ChevronRight, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +26,11 @@ export default async function GroupDetailPage({ params }: { params: Promise<{ id
     .eq("group_id", id)
     .order("session_date", { ascending: false })) as { data: SessionWithBook[] | null };
 
+  const { data: members } = await supabase
+    .from("group_members")
+    .select("user_id, role, profiles(nickname)")
+    .eq("group_id", id);
+
   const upcomingSessions = sessions?.filter((s) => s.status === "upcoming") ?? [];
   const completedSessions = sessions?.filter((s) => s.status === "completed") ?? [];
 
@@ -33,11 +38,21 @@ export default async function GroupDetailPage({ params }: { params: Promise<{ id
     <div className="space-y-6">
       {/* 모임 헤더 */}
       <div>
-        <h1 className="text-xl font-bold">{group.name}</h1>
+        <h1 className="text-[22px] font-bold">{group.name}</h1>
         {group.description && (
-          <p className="text-muted-foreground mt-1 text-sm">{group.description}</p>
+          <p className="text-muted-foreground mt-1 text-[15px]">{group.description}</p>
         )}
-        <p className="text-muted-foreground mt-2 text-xs">만든 사람: {group.created_by}</p>
+        <div className="mt-2 flex items-center gap-2">
+          <Badge variant="secondary" className="text-xs">
+            {members?.length ?? 0}명 참여
+          </Badge>
+          {group.invite_code && (
+            <Badge variant="outline" className="text-xs">
+              <Share2 className="mr-1 h-3 w-3" />
+              {group.invite_code}
+            </Badge>
+          )}
+        </div>
       </div>
 
       {/* 새 세션 추가 */}
@@ -50,7 +65,7 @@ export default async function GroupDetailPage({ params }: { params: Promise<{ id
       {/* 다가오는 세션 */}
       {upcomingSessions.length > 0 && (
         <section className="space-y-3">
-          <h2 className="flex items-center gap-2 font-semibold">
+          <h2 className="flex items-center gap-2 text-[17px] font-semibold">
             <Calendar className="h-4 w-4" />
             다가오는 모임
           </h2>
@@ -72,17 +87,16 @@ export default async function GroupDetailPage({ params }: { params: Promise<{ id
                     </div>
                   )}
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium">{session.books?.title ?? "책 미정"}</p>
-                    <p className="text-muted-foreground text-sm">
+                    <p className="truncate text-[15px] font-medium">
+                      {session.books?.title ?? "책 미정"}
+                    </p>
+                    <p className="text-muted-foreground text-[13px]">
                       {new Date(session.session_date).toLocaleDateString("ko-KR", {
                         month: "long",
                         day: "numeric",
                         weekday: "short",
                       })}
                     </p>
-                    {session.presenter && (
-                      <p className="text-muted-foreground text-xs">발제: {session.presenter}</p>
-                    )}
                   </div>
                   <Badge variant="outline">예정</Badge>
                   <ChevronRight className="text-muted-foreground h-4 w-4" />
@@ -93,20 +107,16 @@ export default async function GroupDetailPage({ params }: { params: Promise<{ id
         </section>
       )}
 
-      {/* 완료된 세션 */}
+      {/* 지난 세션 */}
       <section className="space-y-3">
-        <h2 className="flex items-center gap-2 font-semibold">
+        <h2 className="flex items-center gap-2 text-[17px] font-semibold">
           <BookOpen className="h-4 w-4" />
           지난 모임
         </h2>
         {completedSessions.length === 0 && upcomingSessions.length === 0 ? (
-          <Card>
-            <CardContent className="py-8 text-center">
-              <div className="mb-2 text-3xl">📖</div>
-              <p className="text-muted-foreground text-sm">아직 모임 기록이 없어요</p>
-              <p className="text-muted-foreground mt-1 text-xs">첫 독서 세션을 추가해볼까요?</p>
-            </CardContent>
-          </Card>
+          <div className="py-8 text-center">
+            <p className="text-muted-foreground text-[13px]">아직 모임 기록이 없어요</p>
+          </div>
         ) : (
           completedSessions.map((session) => (
             <Link key={session.id} href={`/groups/${id}/sessions/${session.id}`}>
@@ -126,17 +136,16 @@ export default async function GroupDetailPage({ params }: { params: Promise<{ id
                     </div>
                   )}
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium">{session.books?.title ?? "책 미정"}</p>
-                    <p className="text-muted-foreground text-sm">
+                    <p className="truncate text-[15px] font-medium">
+                      {session.books?.title ?? "책 미정"}
+                    </p>
+                    <p className="text-muted-foreground text-[13px]">
                       {new Date(session.session_date).toLocaleDateString("ko-KR", {
                         month: "long",
                         day: "numeric",
                         weekday: "short",
                       })}
                     </p>
-                    {session.presenter && (
-                      <p className="text-muted-foreground text-xs">발제: {session.presenter}</p>
-                    )}
                   </div>
                   <Badge variant="secondary">완료</Badge>
                   <ChevronRight className="text-muted-foreground h-4 w-4" />

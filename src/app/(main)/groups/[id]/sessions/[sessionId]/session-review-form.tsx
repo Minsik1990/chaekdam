@@ -5,14 +5,10 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
+import { StarRating } from "@/components/features/star-rating";
 import { createClient } from "@/lib/supabase/client";
 
-function getNicknameFromCookie(): string {
-  const match = document.cookie.match(/mingdle_nickname=([^;]+)/);
-  return match ? decodeURIComponent(match[1]) : "모임원";
-}
-
-export function ReviewForm({ sessionId }: { sessionId: string }) {
+export function SessionReviewForm({ sessionId }: { sessionId: string }) {
   const router = useRouter();
   const [content, setContent] = useState("");
   const [rating, setRating] = useState(0);
@@ -28,11 +24,18 @@ export function ReviewForm({ sessionId }: { sessionId: string }) {
 
     try {
       const supabase = createClient();
-      const nickname = getNicknameFromCookie();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-      const { error: dbError } = await supabase.from("reviews").insert({
+      if (!user) {
+        router.push("/login");
+        return;
+      }
+
+      const { error: dbError } = await supabase.from("session_reviews").insert({
         session_id: sessionId,
-        nickname,
+        user_id: user.id,
         content: content.trim(),
         rating: rating || null,
       });
@@ -42,7 +45,7 @@ export function ReviewForm({ sessionId }: { sessionId: string }) {
       setRating(0);
       router.refresh();
     } catch {
-      setError("후기 등록에 실패했어요.");
+      setError("감상 등록에 실패했어요.");
     } finally {
       setLoading(false);
     }
@@ -53,7 +56,7 @@ export function ReviewForm({ sessionId }: { sessionId: string }) {
       <CardContent className="py-4">
         <form onSubmit={handleSubmit} className="space-y-3">
           <Textarea
-            placeholder="이번 모임은 어땠나요? 생각을 남겨보세요 ✨"
+            placeholder="이번 모임은 어땠나요? 생각을 남겨보세요"
             value={content}
             onChange={(e) => setContent(e.target.value)}
             rows={3}
@@ -61,23 +64,12 @@ export function ReviewForm({ sessionId }: { sessionId: string }) {
           />
 
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1">
-              <span className="text-muted-foreground mr-1 text-xs">별점</span>
-              {[1, 2, 3, 4, 5].map((star) => (
-                <button
-                  key={star}
-                  type="button"
-                  onClick={() => setRating(rating === star ? 0 : star)}
-                  className={`text-lg transition-transform hover:scale-110 ${
-                    star <= rating ? "opacity-100" : "opacity-30"
-                  }`}
-                >
-                  ⭐
-                </button>
-              ))}
+            <div className="flex items-center gap-2">
+              <span className="text-muted-foreground text-xs">별점</span>
+              <StarRating value={rating} onChange={setRating} size="sm" />
             </div>
             <Button type="submit" size="sm" disabled={!content.trim() || loading}>
-              {loading ? "등록 중..." : "후기 남기기"}
+              {loading ? "등록 중..." : "감상 남기기"}
             </Button>
           </div>
 

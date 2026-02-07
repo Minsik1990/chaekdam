@@ -1,28 +1,43 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createServerClient } from "@supabase/ssr";
 
 export async function POST(request: NextRequest) {
   const { code } = await request.json();
 
-  const inviteCode = process.env.INVITE_CODE;
-
-  if (!inviteCode) {
-    return NextResponse.json({ error: "서버 설정 오류" }, { status: 500 });
+  if (!code) {
+    return NextResponse.json({ error: "초대 코드가 필요합니다" }, { status: 400 });
   }
 
-  if (code !== inviteCode) {
+  // Supabase에서 초대 코드 확인
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll() {
+          // API route에서는 쿠키 설정 불필요
+        },
+      },
+    }
+  );
+
+  const { data: inviteCode } = await supabase
+    .from("invite_codes")
+    .select("code, used_by, expires_at")
+    .eq("code", code)
+    .single();
+
+  if (!inviteCode) {
     return NextResponse.json({ error: "잘못된 초대 코드" }, { status: 401 });
   }
 
-  const response = NextResponse.json({ success: true });
+  // 만료 확인
+  if (inviteCode.expires_at && new Date(inviteCode.expires_at) < new Date()) {
+    return NextResponse.json({ error: "만료된 초대 코드" }, { status: 401 });
+  }
 
-  // 인증 쿠키 설정 (30일)
-  response.cookies.set("mingdle_verified", "true", {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: 60 * 60 * 24 * 30,
-    path: "/",
-  });
-
-  return response;
+  return NextResponse.json({ success: true });
 }

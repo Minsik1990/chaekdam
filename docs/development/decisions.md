@@ -28,7 +28,7 @@
 - **상태**: 확정
 - **결정**: Supabase를 Backend-as-a-Service로 사용
 - **근거**:
-  - PostgreSQL 기반 관계형 DB (독서 모임 데이터에 적합)
+  - PostgreSQL 기반 관계형 DB (독서 기록/모임 데이터에 적합)
   - Auth, Storage, Realtime, Edge Functions 통합 제공
   - 무료 티어가 넉넉 (500MB DB, 50K MAU)
   - MCP 서버로 자연어 스키마 설계 가능
@@ -38,8 +38,8 @@
   - PlanetScale: Auth, Storage 별도 구성 필요
   - Neon: DB만 제공 (Auth, Storage 없음)
 - **주의사항**:
-  - 7일 비활성 시 자동 일시정지 → cron job으로 방지
-  - Storage 1GB 한계 → Cloudflare R2로 보완
+  - 7일 비활성 시 자동 일시정지 -> cron job으로 방지
+  - Storage 1GB 한계 (MVP 범위에서 충분)
 
 ---
 
@@ -53,78 +53,61 @@
   - 한국어 성능 우수 (감성 대화, 따뜻한 톤 유지)
   - Prompt Caching으로 비용 90% 절감 가능
   - 스트리밍 응답 지원
-  - 모델 라우팅 로직 제거 → 복잡도 최소화
+  - 모델 라우팅 로직 제거 -> 복잡도 최소화
 - **비용 예상**:
   - Sonnet $3/$15 per 1M tokens
   - 10명 모임 기준: ~$3/월 (약 4,000원), Prompt Caching 적용 시 더 절감
 
 ---
 
-## ADR-004: shadcn/ui Maia 스타일 채택
+## ADR-004: shadcn/ui 채택
 
 - **날짜**: 2026-02-07
 - **상태**: 확정
-- **결정**: shadcn/ui를 UI 컴포넌트 라이브러리로, Maia 스타일로 설정
+- **결정**: shadcn/ui를 UI 컴포넌트 라이브러리로 사용
 - **근거**:
-  - 복사-붙여넣기 방식 → 완전한 커스터마이징
+  - 복사-붙여넣기 방식 -> 완전한 커스터마이징
   - Radix UI 기반 접근성 보장
-  - Maia 스타일: 둥근 모서리 + 부드러운 느낌 (Mingdle 디자인 철학과 일치)
   - Tailwind CSS와 완벽 호환
   - 번들 사이즈 최적화 (사용하는 컴포넌트만 포함)
 - **대안 검토**:
-  - MUI: 무겁고, 커스터마이징 어려움, Material 디자인 느낌
-  - Ant Design: 중국풍 디자인, 한국 서비스 느낌과 맞지 않음
-  - Chakra UI: shadcn/ui 대비 번들 무거움
+  - MUI: 무겁고, 커스터마이징 어려움
+  - Ant Design: 중국풍 디자인
+  - Chakra UI: 번들 무거움
 
 ---
 
-## ADR-005: Cloudflare R2 (이미지 저장)
-
-- **날짜**: 2026-02-07
-- **상태**: 확정 (Phase 2에서 구현)
-- **결정**: 모임 사진 저장에 Cloudflare R2 사용
-- **근거**:
-  - 무료 10GB (Supabase Storage 1GB의 10배)
-  - Egress(전송) 완전 무료
-  - S3 호환 API (기존 도구/라이브러리 활용 가능)
-- **대안 검토**:
-  - Supabase Storage: 1GB 한계, Egress 2GB/월
-  - AWS S3: 유료
-  - Uploadthing: 무료 한도 제한적
-
----
-
-## ADR-006: Spec-Driven Development 방법론
+## ADR-005: Spec-Driven Development 방법론
 
 - **날짜**: 2026-02-07
 - **상태**: 확정
 - **결정**: Spec-Driven + AI-First 개발 방법론 채택
 - **근거**:
-  - Addy Osmani의 2026 LLM 코딩 워크플로우 기반 (가장 검증된 접근법)
-  - "Explore → Plan → Implement → Verify → Commit" 5단계
-  - PRD를 AI가 소비 가능한 형식으로 작성 (Prompt Requirements Document)
-  - Human-in-the-Loop (고위험) vs Human-on-the-Loop (저위험) 구분
+  - Addy Osmani의 2026 LLM 코딩 워크플로우 기반
+  - "Explore -> Plan -> Implement -> Verify -> Commit" 5단계
+  - PRD를 AI가 소비 가능한 형식으로 작성
   - 솔로 개발자 + Claude Code 조합에 최적화
-- **출처**:
-  - [Addy Osmani, My LLM Coding Workflow Going into 2026](https://addyosmani.com/blog/ai-coding-workflow/)
-  - [UXPin, Structure AI-Assisted Development with PRDs](https://www.uxpin.com/studio/blog/structure-ai-assisted-development-prds/)
-  - [Claude Code Best Practices (공식)](https://code.claude.com/docs/en/best-practices)
 
 ---
 
-## ADR-007: CLAUDE.md 간결화 원칙
+## ADR-006: CLAUDE.md 간결화 원칙
 
 - **날짜**: 2026-02-07
 - **상태**: 확정
 - **결정**: CLAUDE.md를 50-100줄로 유지, 상세는 docs/ 포인터
 - **근거**:
-  - 모든 단어가 컨텍스트 토큰 소비 → 간결할수록 AI 성능 향상
-  - WHY > WHAT 원칙 (무엇을 하는지보다 왜 하는지)
-  - 코드 복사 대신 파일 경로 포인터 사용
+  - 모든 단어가 컨텍스트 토큰 소비 -> 간결할수록 AI 성능 향상
+  - WHY > WHAT 원칙
   - CRITICAL 키워드로 핵심 제약 강조
-- **출처**:
-  - [Builder.io, The Complete Guide to CLAUDE.md](https://www.builder.io/blog/claude-md-guide)
-  - [HumanLayer, Writing a Good CLAUDE.md](https://www.humanlayer.dev/blog/writing-a-good-claude-md)
+
+---
+
+## ADR-007: Cloudflare R2 (이미지 저장)
+
+- **날짜**: 2026-02-07
+- **상태**: ~~확정~~ -> **폐기 (v2.0-alpha)**
+- **결정**: ~~모임 사진 저장에 Cloudflare R2 사용~~ -> Supabase Storage 사용
+- **폐기 이유**: v2에서 이미지 업로드가 Phase 2로 이동. Supabase Storage(1GB)로 MVP 충분. 별도 인프라 추가 불필요.
 
 ---
 
@@ -132,34 +115,94 @@
 
 - **날짜**: 2026-02-07
 - **상태**: 확정
-- **결정**: GitHub 레포를 Public으로 운영 (기존 ADR-006에서 번호 변경)
+- **결정**: GitHub 레포를 Public으로 운영
 - **근거**:
   - GitHub Actions 무제한 사용 (Private은 2,000분/월)
-  - 오픈소스 커뮤니티 기여 가능성
-  - 비밀 키는 Vercel 환경 변수로 관리 (코드에 포함하지 않음)
+  - 비밀 키는 Vercel 환경 변수로 관리
 - **주의사항**:
   - `.env` 파일 절대 커밋 금지
-  - API 키, 시크릿 등은 반드시 환경 변수 사용
-  - `.gitignore`에 민감 파일 반드시 포함
+  - `.gitignore`에 민감 파일 포함
 
 ---
 
-## ADR-009: MVP 초대 코드 인증 (로그인 없음)
+## ADR-009: MVP 초대 코드 인증
+
+- **날짜**: 2026-02-07
+- **상태**: ~~확정~~ -> **대체 (v2.0-alpha, ADR-010)**
+- **결정**: ~~초대 코드 + 닉네임 (쿠키 기반)~~ -> Magic Link + 초대 코드 (DB 기반)
+- **대체 이유**: v2에서 Supabase Auth Magic Link로 전환. 초대 코드는 가입 제한 용도로 유지하되, DB 테이블(invite_codes)로 관리.
+
+---
+
+## ADR-010: Magic Link 인증 선택
 
 - **날짜**: 2026-02-07
 - **상태**: 확정
-- **결정**: Phase 1 MVP에서 로그인/회원가입 없이 초대 코드 + 닉네임으로 접근 제어
-- **흐름**: 사이트 접속 → 초대 코드 입력 → 닉네임 설정 → 쿠키 저장 → 앱 사용
+- **결정**: Supabase Auth Magic Link (이메일)를 인증 방식으로 채택
 - **근거**:
-  - MVP는 10~30명 소규모 독서 모임 대상 → 무거운 인증 불필요
-  - 카카오 OAuth 설정/테스트 시간 절약
-  - Supabase Auth 의존성 제거 → 프로젝트 셋업 단순화
-  - 카톡방에 코드 공유하면 바로 사용 가능 (진입 장벽 최소화)
-- **구현**:
-  - 환경 변수 `INVITE_CODE`에 비밀 코드 저장
-  - Next.js 미들웨어에서 쿠키 체크
-  - 후기/발제문 작성자는 닉네임으로 표시
-- **마이그레이션 경로**: Phase 3에서 Supabase Auth + 카카오 OAuth 전환 시 닉네임 → 계정으로 매핑
-- **주의사항**:
-  - 초대 코드는 환경 변수이므로 런타임에 변경하려면 Vercel 재배포 필요
-  - 쿠키 만료 설정 필요 (예: 30일)
+  - **카카오 OAuth 배제 이유**: 개인정보처리방침 작성 의무, 사업자등록증 필요(선택), 앱 심사 과정 등 소규모 독서 모임 서비스에 과한 부담
+  - Magic Link는 비밀번호 없이 이메일만으로 로그인 -> 최소한의 마찰
+  - Supabase Auth에 내장되어 별도 설정 최소화
+  - 초대 코드(invite_codes 테이블)로 가입 제한 유지 가능
+  - 향후 Phase 3에서 카카오/구글 OAuth 추가 용이
+- **대안 검토**:
+  - 카카오 OAuth: 개인정보처리방침 부담, 심사 시간
+  - 비밀번호 로그인: 비밀번호 분실/찾기 관리 부담
+  - 초대 코드 + 쿠키 (v1): 사용자 식별 불가, 기기 변경 시 데이터 유실
+
+---
+
+## ADR-011: 따뜻한 토스 디자인 시스템
+
+- **날짜**: 2026-02-07
+- **상태**: 확정
+- **결정**: 밍들레씨 캐릭터 테마를 제거하고, 따뜻한 토스 스타일 디자인 시스템으로 전환
+- **근거**:
+  - 밍들레씨 캐릭터 테마(그린/노랑/핑크)가 "독서 기록" 서비스에 과하게 캐릭터 의존적
+  - 코랄(#F4845F) 포인트 + 깔끔한 미니멀 디자인이 개인 기록 서비스에 적합
+  - 토스의 검증된 UX 패턴 (하단 탭, 카드 레이아웃, 타이포 중심) 활용
+  - 캐릭터 에셋 제작 부담 제거 -> 개발 속도 향상
+  - 라이트 모드 전용으로 범위 축소 -> 복잡도 감소
+- **변경 내용**:
+  - Primary: #7CB342 (그린) -> #F4845F (코랄)
+  - Accent: #FFD54F (노랑) -> #FFB74D (앰버)
+  - 캐릭터 일러스트 -> Lucide 아이콘
+  - 밍들레씨 톤의 카피 -> 깔끔한 안내 문구
+
+---
+
+## ADR-012: 개인 기록 중심 전환
+
+- **날짜**: 2026-02-07
+- **상태**: 확정
+- **결정**: 서비스 핵심을 "독서 모임"에서 "개인 독서 기록"으로 전환
+- **근거**:
+  - 독서 모임은 참여자 수에 의존하여 초기 가치 제공이 어려움 (cold start)
+  - 개인 기록은 혼자서도 즉시 가치를 느낄 수 있음
+  - "기록" -> "모임" 순서가 자연스러운 사용자 여정
+  - 경쟁 서비스(Repov, 북적북적) 분석 결과 개인 기록이 핵심 사용 동기
+  - 독서 모임은 Phase 1에서 기본 기능만 제공하고, 점진적으로 강화
+- **변경 내용**:
+  - 홈 화면: 모임 목록 -> 내 기록 피드
+  - 하단 탭 중앙: "+기록" 버튼 (가장 중요한 액션)
+  - records 테이블 신설 (content, quote, rating, status, card_color)
+  - 대화형 기록(AI Interview) 기능 추가
+
+---
+
+## ADR-013: AI 도구형 전환
+
+- **날짜**: 2026-02-07
+- **상태**: 확정
+- **결정**: AI 에이전트를 캐릭터 페르소나("밍들레")에서 도구형 조력자로 전환
+- **근거**:
+  - 캐릭터 페르소나가 AI 응답의 전문성을 약화시킬 수 있음
+  - 도구형 조력자가 "요약", "토론 주제", "발제문 초안" 등 명확한 기능에 적합
+  - 캐릭터 톤 유지를 위한 복잡한 시스템 프롬프트 불필요 -> 비용 절감
+  - 기능별 전용 엔드포인트 분리로 캐싱 효율 향상
+  - 사용자가 "어떤 기능을 쓸 수 있는지" 명확히 인지 가능
+- **변경 내용**:
+  - `/api/agent/chat` (자유 대화) 삭제
+  - `/api/agent/interview`, `/summarize`, `/topics`, `/draft`, `/analysis` 분리
+  - 시스템 프롬프트: 캐릭터 성격 -> 기능 지시 ("~입니다", "~드립니다" 톤)
+  - 채팅 UI -> AgentPanel (기능 선택 -> 결과 표시)

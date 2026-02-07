@@ -3,10 +3,11 @@
 import { useState } from "react";
 import Image from "next/image";
 import { useRouter, useParams } from "next/navigation";
+import { BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { BookSearch } from "@/components/features/book-search";
 import { createClient } from "@/lib/supabase/client";
 
@@ -19,18 +20,12 @@ interface SelectedBook {
   description: string;
 }
 
-function getNicknameFromCookie(): string {
-  const match = document.cookie.match(/mingdle_nickname=([^;]+)/);
-  return match ? decodeURIComponent(match[1]) : "모임원";
-}
-
 export default function NewSessionPage() {
   const router = useRouter();
   const params = useParams();
   const groupId = params.id as string;
 
   const [sessionDate, setSessionDate] = useState("");
-  const [presenter, setPresenter] = useState("");
   const [selectedBook, setSelectedBook] = useState<SelectedBook | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -44,20 +39,28 @@ export default function NewSessionPage() {
 
     try {
       const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        router.push("/login");
+        return;
+      }
+
       let bookId: string | null = null;
 
-      // 책이 선택된 경우, DB에 저장 (upsert by isbn)
       if (selectedBook) {
-        const { data: existingBook } = (await supabase
+        const { data: existingBook } = await supabase
           .from("books")
           .select("id")
           .eq("isbn", selectedBook.isbn)
-          .single()) as { data: { id: string } | null };
+          .single();
 
         if (existingBook) {
           bookId = existingBook.id;
         } else {
-          const { data: newBook } = (await supabase
+          const { data: newBook } = await supabase
             .from("books")
             .insert({
               isbn: selectedBook.isbn,
@@ -68,7 +71,7 @@ export default function NewSessionPage() {
               description: selectedBook.description,
             })
             .select("id")
-            .single()) as { data: { id: string } | null };
+            .single();
 
           bookId = newBook?.id ?? null;
         }
@@ -78,7 +81,7 @@ export default function NewSessionPage() {
         group_id: groupId,
         book_id: bookId,
         session_date: sessionDate,
-        presenter: presenter.trim() || getNicknameFromCookie(),
+        presenter_id: user.id,
         status: "upcoming",
       });
 
@@ -94,13 +97,10 @@ export default function NewSessionPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-xl font-bold">새 독서 세션</h1>
+      <h1 className="text-[22px] font-bold">새 독서 세션</h1>
 
       <Card>
-        <CardHeader>
-          <CardTitle className="text-base">세션 정보</CardTitle>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="py-4">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="date">모임 날짜</Label>
@@ -139,19 +139,15 @@ export default function NewSessionPage() {
                   </Button>
                 </div>
               ) : (
-                <BookSearch onSelect={setSelectedBook} />
+                <BookSearch
+                  onSelect={setSelectedBook}
+                  trigger={
+                    <Button variant="outline" type="button" className="w-full justify-start">
+                      <BookOpen className="mr-2 h-4 w-4" />책 검색하기
+                    </Button>
+                  }
+                />
               )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="presenter">발제자</Label>
-              <Input
-                id="presenter"
-                placeholder="발제자 이름 (비우면 내 닉네임)"
-                value={presenter}
-                onChange={(e) => setPresenter(e.target.value)}
-                maxLength={20}
-              />
             </div>
 
             {error && <p className="text-destructive text-center text-sm">{error}</p>}

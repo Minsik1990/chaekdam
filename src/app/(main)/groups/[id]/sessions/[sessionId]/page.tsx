@@ -1,13 +1,13 @@
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { BookOpen, Calendar, User } from "lucide-react";
+import { BookOpen, Calendar } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { createClient } from "@/lib/supabase/server";
-import type { SessionWithBook, Review } from "@/lib/supabase/types";
-import { ReviewForm } from "@/components/features/review-form";
-import { ChatPanel } from "@/components/features/chat-panel";
+import type { SessionWithBook, SessionReviewWithProfile } from "@/lib/supabase/types";
+import { SessionReviewForm } from "./session-review-form";
+import { AgentPanel } from "@/components/features/agent-panel";
 
 export default async function SessionDetailPage({
   params,
@@ -26,10 +26,10 @@ export default async function SessionDetailPage({
   if (!session) notFound();
 
   const { data: reviews } = (await supabase
-    .from("reviews")
-    .select("*")
+    .from("session_reviews")
+    .select("*, profiles(nickname)")
     .eq("session_id", sessionId)
-    .order("created_at", { ascending: false })) as { data: Review[] | null };
+    .order("created_at", { ascending: false })) as { data: SessionReviewWithProfile[] | null };
 
   const book = session.books;
   const bookContext = book
@@ -46,10 +46,10 @@ export default async function SessionDetailPage({
             alt={book.title}
             width={80}
             height={112}
-            className="h-28 w-20 rounded-lg object-cover shadow"
+            className="h-28 w-20 rounded-xl object-cover shadow"
           />
         ) : (
-          <div className="bg-muted flex h-28 w-20 items-center justify-center rounded-lg">
+          <div className="bg-muted flex h-28 w-20 items-center justify-center rounded-xl">
             <BookOpen className="text-muted-foreground h-8 w-8" />
           </div>
         )}
@@ -69,12 +69,6 @@ export default async function SessionDetailPage({
                 weekday: "short",
               })}
             </span>
-            {session.presenter && (
-              <span className="text-muted-foreground flex items-center gap-1 text-xs">
-                <User className="h-3 w-3" />
-                발제: {session.presenter}
-              </span>
-            )}
           </div>
         </div>
       </div>
@@ -83,31 +77,32 @@ export default async function SessionDetailPage({
       {session.presentation_text && (
         <Card>
           <CardContent className="py-4">
-            <h2 className="mb-2 text-sm font-semibold">발제문</h2>
-            <div className="text-sm leading-relaxed whitespace-pre-wrap">
+            <h2 className="text-muted-foreground mb-2 text-[13px] font-semibold">발제문</h2>
+            <div className="text-[15px] leading-relaxed whitespace-pre-wrap">
               {session.presentation_text}
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* 책 소개 */}
-      {book?.description && (
-        <Card>
-          <CardContent className="py-4">
-            <h2 className="mb-2 text-sm font-semibold">책 소개</h2>
-            <p className="text-muted-foreground text-sm leading-relaxed">{book.description}</p>
-          </CardContent>
-        </Card>
+      {/* AI 에이전트 */}
+      {bookContext && (
+        <>
+          <Separator />
+          <section className="space-y-3">
+            <h2 className="text-[17px] font-semibold">AI 도우미</h2>
+            <AgentPanel bookContext={bookContext} bookId={book?.id} />
+          </section>
+        </>
       )}
 
       <Separator />
 
-      {/* 후기 섹션 */}
+      {/* 감상 섹션 */}
       <section className="space-y-4">
-        <h2 className="font-semibold">후기 ({reviews?.length ?? 0})</h2>
+        <h2 className="text-[17px] font-semibold">감상 ({reviews?.length ?? 0})</h2>
 
-        <ReviewForm sessionId={sessionId} />
+        <SessionReviewForm sessionId={sessionId} />
 
         {reviews && reviews.length > 0 ? (
           <div className="space-y-3">
@@ -115,17 +110,14 @@ export default async function SessionDetailPage({
               <Card key={review.id}>
                 <CardContent className="py-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">{review.nickname}</span>
-                    <div className="flex items-center gap-1">
-                      {review.rating && (
-                        <span className="text-xs">{"⭐".repeat(review.rating)}</span>
-                      )}
-                      <span className="text-muted-foreground text-xs">
-                        {new Date(review.created_at).toLocaleDateString("ko-KR")}
-                      </span>
-                    </div>
+                    <span className="text-sm font-medium">
+                      {review.profiles?.nickname ?? "익명"}
+                    </span>
+                    <span className="text-muted-foreground text-xs">
+                      {new Date(review.created_at).toLocaleDateString("ko-KR")}
+                    </span>
                   </div>
-                  <p className="mt-2 text-sm leading-relaxed whitespace-pre-wrap">
+                  <p className="mt-2 text-[15px] leading-relaxed whitespace-pre-wrap">
                     {review.content}
                   </p>
                 </CardContent>
@@ -134,14 +126,10 @@ export default async function SessionDetailPage({
           </div>
         ) : (
           <div className="py-6 text-center">
-            <p className="text-muted-foreground text-sm">아직 후기가 없어요</p>
-            <p className="text-muted-foreground mt-1 text-xs">첫 번째 후기를 남겨보세요! ✨</p>
+            <p className="text-muted-foreground text-[13px]">아직 감상이 없어요</p>
           </div>
         )}
       </section>
-
-      {/* 밍들레 채팅 */}
-      <ChatPanel bookContext={bookContext} />
     </div>
   );
 }
