@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { X, Plus, ImageIcon, Camera } from "lucide-react";
@@ -43,11 +43,14 @@ export function SessionForm({ clubId, initialData, sessionId }: SessionFormProps
 
   const [book, setBook] = useState<BookInfo | null>(initialData?.book ?? null);
   const [sessionDate, setSessionDate] = useState(
-    initialData?.sessionDate ?? new Date().toISOString().split("T")[0]
+    initialData?.sessionDate ??
+      new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().split("T")[0]
   );
   const [presenter, setPresenter] = useState(initialData?.presenter ?? "");
   const [participants, setParticipants] = useState<string[]>(initialData?.participants ?? []);
   const [participantInput, setParticipantInput] = useState("");
+  const participantValueRef = useRef("");
+  const photoInputRef = useRef<HTMLInputElement>(null);
   const [presentationText, setPresentationText] = useState(initialData?.presentationText ?? "");
   const [content, setContent] = useState(initialData?.content ?? "");
   const [photoFiles, setPhotoFiles] = useState<File[]>([]);
@@ -75,10 +78,21 @@ export function SessionForm({ clubId, initialData, sessionId }: SessionFormProps
   function addParticipant(name: string) {
     const trimmed = name.trim();
     if (trimmed && !participants.includes(trimmed)) {
-      setParticipants([...participants, trimmed]);
+      setParticipants((prev) => [...prev, trimmed]);
     }
     setParticipantInput("");
+    participantValueRef.current = "";
     setShowSuggestions(false);
+  }
+
+  // IME 조합 완료 후 안전하게 추가 (한국어 입력 대응)
+  function addParticipantSafe() {
+    setTimeout(() => {
+      const val = participantValueRef.current.trim();
+      if (val) {
+        addParticipant(val);
+      }
+    }, 30);
   }
 
   function removeParticipant(name: string) {
@@ -335,11 +349,19 @@ export function SessionForm({ clubId, initialData, sessionId }: SessionFormProps
             <Input
               placeholder="참여자 이름 입력"
               value={participantInput}
-              onChange={(e) => setParticipantInput(e.target.value)}
+              onChange={(e) => {
+                setParticipantInput(e.target.value);
+                participantValueRef.current = e.target.value;
+              }}
+              onCompositionEnd={(e) => {
+                const val = (e.target as HTMLInputElement).value;
+                setParticipantInput(val);
+                participantValueRef.current = val;
+              }}
               onKeyDown={(e) => {
-                if (e.key === "Enter") {
+                if (e.key === "Enter" && !e.nativeEvent.isComposing) {
                   e.preventDefault();
-                  addParticipant(participantInput);
+                  addParticipantSafe();
                 }
               }}
               className="bg-input h-12 flex-1 border-0"
@@ -349,7 +371,7 @@ export function SessionForm({ clubId, initialData, sessionId }: SessionFormProps
               type="button"
               variant="secondary"
               className="h-12 shrink-0 rounded-[14px] px-4"
-              onClick={() => addParticipant(participantInput)}
+              onClick={addParticipantSafe}
               disabled={!participantInput.trim()}
             >
               추가
@@ -442,17 +464,24 @@ export function SessionForm({ clubId, initialData, sessionId }: SessionFormProps
           </div>
         )}
         {existingPhotos.length + photoFiles.length < 10 && (
-          <label className="border-border text-muted-foreground hover:bg-muted flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-[14px] border-2 border-dashed text-sm">
-            <Camera className="h-4 w-4" />
-            사진 추가 (최대 10장)
+          <>
+            <button
+              type="button"
+              onClick={() => photoInputRef.current?.click()}
+              className="border-border text-muted-foreground hover:bg-muted flex h-12 w-full items-center justify-center gap-2 rounded-[14px] border-2 border-dashed text-sm"
+            >
+              <Camera className="h-4 w-4" />
+              사진 추가 (최대 10장)
+            </button>
             <input
+              ref={photoInputRef}
               type="file"
               accept="image/*"
               multiple
               onChange={handlePhotoSelect}
               className="sr-only"
             />
-          </label>
+          </>
         )}
       </div>
 

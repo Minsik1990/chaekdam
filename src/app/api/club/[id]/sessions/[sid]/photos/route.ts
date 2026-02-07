@@ -64,3 +64,50 @@ export async function POST(
 
   return NextResponse.json({ photos: allPhotos }, { status: 201 });
 }
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string; sid: string }> }
+) {
+  const { sid: sessionId } = await params;
+  const body = await request.json();
+  const { photoUrl } = body;
+
+  if (!photoUrl) {
+    return NextResponse.json({ error: "삭제할 사진 URL이 필요합니다." }, { status: 400 });
+  }
+
+  const supabase = createClient();
+
+  // 기존 사진 목록에서 제거
+  const { data: session } = await supabase
+    .from("club_sessions")
+    .select("photos")
+    .eq("id", sessionId)
+    .maybeSingle();
+
+  const existingPhotos = (session?.photos as string[] | null) ?? [];
+  const updatedPhotos = existingPhotos.filter((url: string) => url !== photoUrl);
+
+  const { error: updateError } = await supabase
+    .from("club_sessions")
+    .update({ photos: updatedPhotos, updated_at: new Date().toISOString() })
+    .eq("id", sessionId);
+
+  if (updateError) {
+    return NextResponse.json({ error: updateError.message }, { status: 500 });
+  }
+
+  // Storage에서도 파일 삭제 (URL에서 경로 추출)
+  try {
+    const url = new URL(photoUrl);
+    const pathMatch = url.pathname.match(/\/session-photos\/(.+)$/);
+    if (pathMatch) {
+      await supabase.storage.from("session-photos").remove([pathMatch[1]]);
+    }
+  } catch {
+    // Storage 삭제 실패는 무시 (DB에서는 이미 제거됨)
+  }
+
+  return NextResponse.json({ photos: updatedPhotos });
+}
