@@ -51,6 +51,7 @@ export function SessionForm({ clubId, initialData, sessionId }: SessionFormProps
   const [presentationText, setPresentationText] = useState(initialData?.presentationText ?? "");
   const [content, setContent] = useState(initialData?.content ?? "");
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
   const [members, setMembers] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
@@ -90,21 +91,28 @@ export function SessionForm({ clubId, initialData, sessionId }: SessionFormProps
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!sessionDate) return;
+    setError("");
+
+    if (!book) {
+      setError("읽은 책을 선택해주세요.");
+      return;
+    }
+    if (!sessionDate) {
+      setError("모임 날짜를 입력해주세요.");
+      return;
+    }
 
     setSaving(true);
     try {
       const payload = {
-        book: book
-          ? {
-              isbn: book.isbn,
-              title: book.title,
-              author: book.author,
-              publisher: book.publisher,
-              coverUrl: book.coverUrl,
-              description: book.description,
-            }
-          : null,
+        book: {
+          isbn: book.isbn,
+          title: book.title,
+          author: book.author,
+          publisher: book.publisher,
+          coverUrl: book.coverUrl,
+          description: book.description,
+        },
         sessionDate,
         presenter,
         participants,
@@ -123,13 +131,16 @@ export function SessionForm({ clubId, initialData, sessionId }: SessionFormProps
         body: JSON.stringify(payload),
       });
 
+      const data = await res.json();
+
       if (res.ok) {
-        const data = await res.json();
         router.push(`/club/${clubId}/session/${data.session.id}`);
         router.refresh();
+      } else {
+        setError(data.error || "저장에 실패했습니다.");
       }
     } catch {
-      // 에러 처리
+      setError("네트워크 오류가 발생했습니다.");
     } finally {
       setSaving(false);
     }
@@ -318,12 +329,11 @@ export function SessionForm({ clubId, initialData, sessionId }: SessionFormProps
         />
       </div>
 
+      {/* 에러 메시지 */}
+      {error && <p className="text-destructive text-center text-sm">{error}</p>}
+
       {/* 제출 */}
-      <Button
-        type="submit"
-        className="h-12 w-full rounded-[14px]"
-        disabled={saving || !sessionDate}
-      >
+      <Button type="submit" className="h-12 w-full rounded-[14px]" disabled={saving}>
         {saving ? "저장 중..." : isEdit ? "수정하기" : "기록하기"}
       </Button>
     </form>

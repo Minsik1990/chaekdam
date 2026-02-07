@@ -5,6 +5,7 @@ import { Calendar, User, Users, BookOpen, Pencil } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
 import { DeleteSessionButton } from "@/components/features/delete-session-button";
+import { SessionComments } from "@/components/features/session-comments";
 import type { Database } from "@/lib/supabase/database.types";
 
 type ClubSession = Database["public"]["Tables"]["club_sessions"]["Row"];
@@ -152,6 +153,11 @@ export default async function SessionDetailPage({
           </div>
         </div>
       )}
+
+      {/* 후기/댓글 */}
+      <div className="bg-card rounded-[20px] p-4 shadow-sm">
+        <SessionComments clubId={clubId} sessionId={sid} />
+      </div>
     </div>
   );
 }
