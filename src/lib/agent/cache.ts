@@ -11,9 +11,13 @@ export async function getCachedContent(
     .select("content")
     .eq("book_id", bookId)
     .eq("content_type", contentType)
-    .single();
+    .maybeSingle();
 
   if (data?.content) {
+    // { text: "..." } 형태로 저장된 경우 text 필드 추출
+    if (typeof data.content === "object" && data.content !== null && "text" in data.content) {
+      return (data.content as { text: string }).text;
+    }
     return typeof data.content === "string" ? data.content : JSON.stringify(data.content);
   }
   return null;

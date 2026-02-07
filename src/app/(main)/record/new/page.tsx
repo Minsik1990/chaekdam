@@ -82,7 +82,7 @@ export default function NewRecordPage() {
         .from("books")
         .select("id")
         .eq("isbn", selectedBook.isbn)
-        .single();
+        .maybeSingle();
 
       if (existingBook) {
         bookId = existingBook.id;

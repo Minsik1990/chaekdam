@@ -45,7 +45,8 @@ export function createAgentStream({
           }
         }
         controller.enqueue(encoder.encode("data: [DONE]\n\n"));
-      } catch {
+      } catch (err) {
+        console.error("[AI Stream Error]", err);
         controller.enqueue(
           encoder.encode(
             `data: ${JSON.stringify({ error: "AI 응답 생성 중 오류가 발생했습니다" })}\n\n`

@@ -52,23 +52,29 @@ export function InterviewChat({ bookContext, bookId, onSummaryReady }: Interview
       const reader = res.body?.getReader();
       const decoder = new TextDecoder();
       let assistantText = "";
+      let buffer = "";
 
       if (reader) {
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
 
-          const chunk = decoder.decode(value, { stream: true });
-          const lines = chunk.split("\n");
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split("\n");
+          buffer = lines.pop() ?? "";
 
           for (const line of lines) {
             if (line.startsWith("data: ") && line !== "data: [DONE]") {
               try {
                 const data = JSON.parse(line.slice(6));
-                assistantText += data.text;
+                if (data.error) {
+                  assistantText = data.error;
+                } else if (data.text) {
+                  assistantText += data.text;
+                }
                 setMessages([...newMessages, { role: "assistant", content: assistantText }]);
               } catch {
-                // JSON 파싱 실패 무시
+                // JSON 파싱 실패 무시 (불완전한 청크)
               }
             }
           }

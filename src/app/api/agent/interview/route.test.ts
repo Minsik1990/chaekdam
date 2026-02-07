@@ -89,7 +89,7 @@ describe("POST /api/agent/interview", () => {
     expect(res.headers.get("X-Conversation-Id")).toBe("conv-123");
   });
 
-  it("비인증 사용자도 스트리밍은 가능하지만 대화 저장은 안 한다", async () => {
+  it("비인증 사용자는 401을 반환한다", async () => {
     mockGetUser.mockResolvedValueOnce({ data: { user: null } });
 
     const req = new NextRequest("http://localhost:9000/api/agent/interview", {
@@ -100,8 +100,9 @@ describe("POST /api/agent/interview", () => {
     });
 
     const res = await POST(req);
-    // 스트리밍 응답 (에러 아님)
-    expect(res.headers.get("Content-Type")).toBe("text/event-stream");
+    expect(res.status).toBe(401);
+    const data = await res.json();
+    expect(data.error).toBe("로그인이 필요합니다");
     expect(mockSaveConversation).not.toHaveBeenCalled();
   });
 

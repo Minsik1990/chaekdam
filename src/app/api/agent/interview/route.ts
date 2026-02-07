@@ -25,6 +25,13 @@ export async function POST(request: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser();
 
+    if (!user) {
+      return new Response(JSON.stringify({ error: "로그인이 필요합니다" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
     // 대화 저장 (await로 ID 확보 후 스트리밍 시작)
     let savedConversationId = conversationId;
     if (user) {
