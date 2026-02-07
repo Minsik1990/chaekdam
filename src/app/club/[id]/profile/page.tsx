@@ -54,12 +54,9 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
     .map(([name, count]) => ({ name, count }))
     .sort((a, b) => b.count - a.count);
 
-  // 참여자 통계 (발제 + 참여 합산)
+  // 참여자 통계 (참여만, 발제 제외)
   const participationCount = new Map<string, number>();
   for (const s of allSessions) {
-    if (s.presenter) {
-      participationCount.set(s.presenter, (participationCount.get(s.presenter) ?? 0) + 1);
-    }
     if (s.participants) {
       for (const p of s.participants as string[]) {
         participationCount.set(p, (participationCount.get(p) ?? 0) + 1);
@@ -114,7 +111,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
           <CardContent className="pt-6">
             <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold">
               <UserCheck className="text-primary h-4 w-4" />
-              멤버 참여 현황
+              참여 현황
             </h3>
             <div className="flex flex-wrap gap-2">
               {memberStats.map((m) => (
@@ -134,26 +131,29 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
         </Card>
       )}
 
-      {/* 발제자 통계 */}
+      {/* 발제 횟수 */}
       {presenterStats.length > 0 && (
         <Card className="rounded-[20px]">
           <CardContent className="pt-6">
             <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold">
               <Mic className="text-primary h-4 w-4" />
-              발제자 통계
+              발제 횟수
             </h3>
-            <div className="flex flex-wrap gap-2">
+            <div className="space-y-2.5">
               {presenterStats.map((m) => (
-                <Badge
-                  key={m.name}
-                  variant="secondary"
-                  className="gap-1.5 rounded-full py-1.5 pr-2.5 pl-3"
-                >
-                  {m.name}
-                  <span className="bg-primary/10 text-primary inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-xs font-bold">
-                    {m.count}
-                  </span>
-                </Badge>
+                <div key={m.name} className="flex items-center gap-3">
+                  <span className="w-16 shrink-0 truncate text-sm font-medium">{m.name}</span>
+                  <div className="bg-muted h-7 flex-1 overflow-hidden rounded-full">
+                    <div
+                      className="bg-primary flex h-full items-center rounded-full px-2.5 transition-all"
+                      style={{
+                        width: `${Math.max((m.count / presenterStats[0].count) * 100, 15)}%`,
+                      }}
+                    >
+                      <span className="text-xs font-bold text-white">{m.count}회</span>
+                    </div>
+                  </div>
+                </div>
               ))}
             </div>
           </CardContent>
