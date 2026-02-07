@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 export default function SettingsPage() {
   const params = useParams();
@@ -27,6 +28,7 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showFinalConfirm, setShowFinalConfirm] = useState(false);
   const [deletePassword, setDeletePassword] = useState("");
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
@@ -93,12 +95,16 @@ export default function SettingsPage() {
     }
   }
 
-  async function handleDelete() {
+  function requestDelete() {
     if (!deletePassword.trim()) {
       setDeleteError("관리자 비밀번호를 입력하세요.");
       return;
     }
+    setShowFinalConfirm(true);
+  }
 
+  async function handleDelete() {
+    setShowFinalConfirm(false);
     setDeleting(true);
     setDeleteError("");
 
@@ -313,7 +319,7 @@ export default function SettingsPage() {
               <div className="flex gap-2">
                 <Button
                   variant="destructive"
-                  onClick={handleDelete}
+                  onClick={requestDelete}
                   disabled={deleting || !deletePassword.trim()}
                   className="h-10 flex-1 rounded-[14px]"
                 >
@@ -335,6 +341,36 @@ export default function SettingsPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* 최종 삭제 확인 다이얼로그 */}
+      <Dialog open={showFinalConfirm} onOpenChange={setShowFinalConfirm}>
+        <DialogContent className="rounded-[20px] sm:max-w-sm">
+          <DialogTitle className="text-center text-lg font-semibold">
+            정말 삭제하시겠습니까?
+          </DialogTitle>
+          <DialogDescription className="text-center">
+            이 작업은 되돌릴 수 없습니다.
+            <br />
+            모든 세션, 멤버, 사진이 영구 삭제됩니다.
+          </DialogDescription>
+          <div className="flex gap-2 pt-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowFinalConfirm(false)}
+              className="h-10 flex-1 rounded-[14px]"
+            >
+              취소
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              className="h-10 flex-1 rounded-[14px]"
+            >
+              삭제합니다
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
