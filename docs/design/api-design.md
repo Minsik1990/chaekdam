@@ -36,7 +36,7 @@
 
 ```json
 {
-  "code": "CHAEKDAM2026"
+  "code": "DOKDOK2026"
 }
 ```
 

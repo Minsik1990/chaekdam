@@ -4,7 +4,7 @@
 >
 > v2에서 밍들레씨 캐릭터 테마와 AI 에이전트 페르소나 "밍들레"가 제거되었습니다.
 >
-> - 디자인: 따뜻한 토스 스타일 (코랄 #F4845F) -> [ui-ux.md](ui-ux.md)
+> - 디자인: 포레스트그린 테마 (#2D6A4F) -> [ui-ux.md](ui-ux.md)
 > - AI 에이전트: 도구형 조력자 (캐릭터 없음) -> [api-design.md](api-design.md)
 > - 결정 근거: ADR-011, ADR-013 -> [decisions.md](../development/decisions.md)
 >

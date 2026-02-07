@@ -10,7 +10,7 @@
 
 - 서비스 컨셉 전환: "독서 모임 중심" -> "개인 독서 기록 중심"
 - 인증 방식 변경: 초대 코드 + 쿠키 -> Supabase Auth Magic Link (이메일)
-- 디자인 시스템 변경: 밍들레씨 테마 (그린/노랑/핑크) -> 따뜻한 토스 스타일 (코랄 #F4845F)
+- 디자인 시스템 변경: 밍들레씨 테마 (그린/노랑/핑크) -> 포레스트그린 테마 (#2D6A4F)
 - AI 에이전트 변경: 캐릭터 페르소나 "밍들레" -> 도구형 조력자 (캐릭터 없음)
 - API 변경: `/api/agent/chat` 삭제, 기능별 전용 엔드포인트 분리
 
@@ -33,7 +33,7 @@
 
 - 라우팅 구조: `(auth)/`, `groups/`, `sessions/` -> `login/`, `onboarding/`, `(main)/*`
 - DB 스키마: 12개 테이블 (v1의 8개에서 확장)
-- 색상: background #FAFAFA, primary #F4845F, accent #FFB74D, success #66BB6A
+- 색상: background #FAFAFA, primary #2D6A4F, accent #C9A96E, success #66BB6A
 - 타이포: 22px/700, 17px/600, 15px/400, 13px/400
 - 레이아웃: max-width 480px, 하단 탭 56px + safe-area
 - 환경 변수: Cloudflare R2, 알라딘, 정보나루 관련 변수 제거
@@ -52,7 +52,7 @@
 ### Decisions
 
 - ADR-010: Magic Link 인증 채택
-- ADR-011: 따뜻한 토스 디자인 시스템 채택
+- ADR-011: 포레스트그린 디자인 시스템 채택
 - ADR-012: 개인 기록 중심 전환
 - ADR-013: AI 도구형 전환
 

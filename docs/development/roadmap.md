@@ -27,7 +27,7 @@
 ### Step 0: 프로젝트 셋업
 
 - [x] Next.js 16 + TypeScript + Tailwind CSS v4 + pnpm 초기화
-- [x] shadcn/ui 초기화 (코랄 테마 커스텀)
+- [x] shadcn/ui 초기화 (포레스트그린 테마 커스텀)
 - [x] Pretendard 폰트 설정
 - [x] Supabase 프로젝트 생성 + 로컬 개발 환경
 - [x] 환경 변수 설정 (.env.local)

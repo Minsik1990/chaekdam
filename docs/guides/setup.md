@@ -29,15 +29,15 @@
 
 ```bash
 # Vercel 공식 Next.js + Supabase 템플릿
-npx create-next-app -e with-supabase chaekdam
-cd chaekdam
+npx create-next-app -e with-supabase dokdok
+cd dokdok
 ```
 
 ### 방법 2: 수동 설정
 
 ```bash
-npx create-next-app@latest chaekdam --typescript --tailwind --eslint --app --use-pnpm
-cd chaekdam
+npx create-next-app@latest dokdok --typescript --tailwind --eslint --app --use-pnpm
+cd dokdok
 pnpm add @supabase/supabase-js @supabase/ssr
 ```
 
@@ -128,7 +128,7 @@ npx supabase gen types typescript --local > database.types.ts
 -- 초기 초대 코드 생성 (Supabase SQL Editor에서 실행)
 INSERT INTO invite_codes (code, max_uses, is_active)
 VALUES
-  ('CHAEKDAM2026', 50, true),
+  ('DOKDOK2026', 50, true),
   ('READING2026', 50, true);
 ```
 

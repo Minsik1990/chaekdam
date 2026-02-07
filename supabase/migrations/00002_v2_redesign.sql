@@ -1,4 +1,4 @@
--- Chaekdam v2 전면 개편 마이그레이션
+-- DokDok v2 전면 개편 마이그레이션
 -- 개인 독서 기록 중심 + Supabase Auth Magic Link
 
 -- 프로필 (Supabase Auth 연동)

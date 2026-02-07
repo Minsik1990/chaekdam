@@ -1,7 +1,7 @@
 # UI/UX 디자인 시스템
 
 > 최종 업데이트: 2026-02-07 (v2.0)
-> v2 전면 개편: 따뜻한 토스 스타일 디자인 시스템
+> v2 전면 개편: 포레스트그린 테마 디자인 시스템
 
 ---
 
@@ -9,7 +9,7 @@
 
 ### 핵심 키워드
 
-- **따뜻한 (Warm)**: 코랄 포인트, 파스텔 카드 배경, 부드러운 모서리
+- **자연적 (Natural)**: 포레스트그린 포인트, 파스텔 카드 배경, 부드러운 모서리
 - **깔끔한 (Clean)**: 토스처럼 미니멀하고 여백 충분
 - **직관적 (Intuitive)**: 하단 탭 5개, 한 손 조작 최적화
 - **모바일 퍼스트 (Mobile-First)**: 480px 기준, 라이트 모드 전용
@@ -19,7 +19,7 @@
 | 서비스     | 참고 요소                                             |
 | ---------- | ----------------------------------------------------- |
 | **토스**   | 미니멀 레이아웃, 직관적 네비게이션, 타이포그래피 중심 |
-| **카카오** | 따뜻한 색감, 카드형 UI, 둥근 모서리                   |
+| **카카오** | 자연적 색감, 카드형 UI, 둥근 모서리                   |
 | **Repov**  | 독서 기록 카드, 감성적 색상 팔레트                    |
 
 ---
@@ -39,16 +39,16 @@ border:        #E5E8EB    (테두리)
 ### Brand Colors
 
 ```
-primary:       #F4845F    (코랄 — 메인 포인트, CTA)
+primary:       #2D6A4F    (포레스트그린 — 메인 포인트, CTA)
 primary-foreground: #FFFFFF
-secondary:     #FFF4F0    (연한 코랄 — 태그, 배경 강조)
-secondary-foreground: #F4845F
+secondary:     #E8F0EC    (연한 그린 — 태그, 배경 강조)
+secondary-foreground: #2D6A4F
 ```
 
 ### Semantic Colors
 
 ```
-accent:        #FFB74D    (앰버 — 별점, 하이라이트)
+accent:        #C9A96E    (크래프트베이지 — 별점, 하이라이트)
 success:       #66BB6A    (성공, 완독 상태)
 destructive:   #F44336    (삭제, 에러)
 ```
@@ -111,9 +111,9 @@ margin:        0 auto (데스크톱 중앙 정렬)
 탭 개수:       5개 (홈 / 검색 / +기록 / 모임 / 프로필)
 높이:          56px + safe-area-inset-bottom
 배경:          #FFFFFF + border-top 1px #E5E8EB
-활성 탭:       #F4845F (코랄)
+활성 탭:       #2D6A4F (포레스트그린)
 비활성 탭:     #8B95A1 (muted)
-+기록 버튼:    코랄 원형 아이콘 (강조)
++기록 버튼:    포레스트그린 원형 아이콘 (강조)
 ```
 
 ### 페이지 구조
@@ -157,8 +157,8 @@ margin:        0 auto (데스크톱 중앙 정렬)
 ### 버튼
 
 ```
-Primary:     배경 #F4845F, 텍스트 #FFFFFF, rounded-xl, h-48px
-Secondary:   배경 #FFF4F0, 텍스트 #F4845F, rounded-xl, h-48px
+Primary:     배경 #2D6A4F, 텍스트 #FFFFFF, rounded-xl, h-48px
+Secondary:   배경 #E8F0EC, 텍스트 #2D6A4F, rounded-xl, h-48px
 Ghost:       배경 transparent, 호버 #FAFAFA, rounded-xl
 Destructive: 배경 #F44336, 텍스트 #FFFFFF, rounded-xl
 ```
@@ -169,7 +169,7 @@ Destructive: 배경 #F44336, 텍스트 #FFFFFF, rounded-xl
 배경:          #FFFFFF
 테두리:        1px #E5E8EB
 모서리:        12px
-포커스:        테두리 #F4845F + 배경 #FFF4F0
+포커스:        테두리 #2D6A4F + 배경 #E8F0EC
 높이:          48px
 플레이스홀더:  #8B95A1
 ```
@@ -178,7 +178,7 @@ Destructive: 배경 #F44336, 텍스트 #FFFFFF, rounded-xl
 
 ```
 아이콘:        Star (Lucide)
-활성 색상:     #FFB74D (앰버)
+활성 색상:     #C9A96E (크래프트베이지)
 비활성 색상:   #E5E8EB
 크기:          24px (입력) / 16px (표시)
 ```
@@ -186,9 +186,9 @@ Destructive: 배경 #F44336, 텍스트 #FFFFFF, rounded-xl
 ### 상태 배지 (StatusBadge)
 
 ```
-읽는 중:       배경 #FFF4F0, 텍스트 #F4845F
+읽는 중:       배경 #E8F0EC, 텍스트 #2D6A4F
 완독:          배경 #E8F5E9, 텍스트 #66BB6A
-읽고 싶은:     배경 #FFF8E1, 텍스트 #FFB74D
+읽고 싶은:     배경 #F5F0E5, 텍스트 #C9A96E
 ```
 
 ---
@@ -208,10 +208,10 @@ Destructive: 배경 #F44336, 텍스트 #FFFFFF, rounded-xl
 
 ### 7.1 로그인 (/login)
 
-- 서비스 로고 + "나의 독서 기록" 카피
+- 서비스 로고 + "독서를 두드리다" 카피
 - 초대 코드 입력 필드
 - 이메일 입력 필드
-- Magic Link 발송 버튼 (코랄)
+- Magic Link 발송 버튼 (포레스트그린)
 - 깔끔하고 여백 충분한 레이아웃
 
 ### 7.2 홈 (/(main)/home)
@@ -268,7 +268,7 @@ Destructive: 배경 #F44336, 텍스트 #FFFFFF, rounded-xl
 | 후기 없음      | "아직 후기가 없어요"      | "이번 세션은 어떠셨나요?"                |
 
 - 아이콘: Lucide 아이콘 (64px, muted 색상)
-- CTA 버튼: 코랄 primary
+- CTA 버튼: 포레스트그린 primary
 
 ---
 
@@ -290,7 +290,7 @@ Destructive: 배경 #F44336, 텍스트 #FFFFFF, rounded-xl
 
 - shadcn/ui + Radix UI 기본 접근성 지원
 - 키보드 네비게이션 (Tab, Enter, Escape)
-- WCAG AA 색상 대비 (코랄 #F4845F on white: 3.2:1, large text OK)
+- WCAG AA 색상 대비 (포레스트그린 #2D6A4F on white: 5.4:1, large text OK)
 - 스크린 리더 지원 (시맨틱 HTML, aria-label)
-- 포커스 링: 2px solid #F4845F
+- 포커스 링: 2px solid #2D6A4F
 - 다크 모드: 지원하지 않음 (v2 범위 외)

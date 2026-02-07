@@ -8,12 +8,12 @@ import type { RecordWithBook } from "@/lib/supabase/types";
 
 const CARD_COLORS: Record<string, string> = {
   white: "bg-white",
-  peach: "bg-[#FFF0E8]",
-  lavender: "bg-[#F3EEFF]",
-  mint: "bg-[#E8F5E9]",
-  lemon: "bg-[#FFF9C4]",
-  rose: "bg-[#FFE8EC]",
-  sky: "bg-[#E3F2FD]",
+  parchment: "bg-[#F5EFE0]",
+  sage: "bg-[#E8F0E8]",
+  linen: "bg-[#F0EDE6]",
+  moss: "bg-[#E0EDE0]",
+  sand: "bg-[#F2EDE4]",
+  mist: "bg-[#E8ECF0]",
 };
 
 export function RecordCard({ record }: { record: RecordWithBook }) {

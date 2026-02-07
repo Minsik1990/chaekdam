@@ -5,7 +5,7 @@ tools: Read, Grep, Glob, Bash
 model: haiku
 ---
 
-책담(Chaekdam) 프로젝트의 코드 변경사항을 리뷰합니다:
+독독(DokDok) 프로젝트의 코드 변경사항을 리뷰합니다:
 
 ## 체크리스트
 
@@ -19,6 +19,6 @@ model: haiku
 ## 프로젝트 컨텍스트
 
 - Next.js 16 App Router + Supabase + Claude API
-- 색상: 코랄(#F4845F), 앰버(#FFB74D), 화이트(#FAFAFA)
+- 색상: 포레스트그린(#2D6A4F), 크래프트베이지(#C9A96E), 종이(#FAF8F5)
 - shadcn/ui, Tailwind CSS v4
 - 무료 운영 제약 (Supabase Free, Vercel Hobby)
