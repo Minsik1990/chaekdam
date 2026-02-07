@@ -18,4 +18,4 @@ export interface AgentRequest {
   };
 }
 
-export type ConversationType = "record_interview" | "group_discussion" | "analysis";
+export type ConversationType = "chat" | "interview" | "summarize" | "topics" | "draft" | "analysis";

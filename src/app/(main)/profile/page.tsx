@@ -1,7 +1,11 @@
+import Link from "next/link";
+import { Pencil } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent } from "@/components/ui/card";
 import { StarRating } from "@/components/features/star-rating";
 import { LogoutButton } from "./logout-button";
+import type { Profile } from "@/lib/supabase/types";
 
 export default async function ProfilePage() {
   const supabase = await createClient();
@@ -9,7 +13,12 @@ export default async function ProfilePage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data: profile } = await supabase.from("profiles").select("*").eq("id", user!.id).single();
+  const { data: profileData } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", user!.id)
+    .single();
+  const profile = profileData as Profile | null;
 
   const { data: records } = await supabase
     .from("records")
@@ -37,6 +46,13 @@ export default async function ProfilePage() {
             </div>
             <h2 className="mt-3 text-lg font-bold">{profile?.nickname ?? "독서가"}</h2>
             <p className="text-muted-foreground text-[13px]">{user?.email}</p>
+            {profile?.bio && <p className="text-muted-foreground mt-1 text-sm">{profile.bio}</p>}
+            <Button variant="outline" size="sm" className="mt-3" asChild>
+              <Link href="/profile/edit">
+                <Pencil className="mr-1 h-3 w-3" />
+                프로필 편집
+              </Link>
+            </Button>
           </CardContent>
         </Card>
 

@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { BookOpen, Calendar } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,14 +8,23 @@ import { createClient } from "@/lib/supabase/server";
 import type { SessionWithBook, SessionReviewWithProfile } from "@/lib/supabase/types";
 import { SessionReviewForm } from "./session-review-form";
 import { AgentPanel } from "@/components/features/agent-panel";
+import { SessionActions } from "./session-actions";
+import { PresentationEditor } from "./presentation-editor";
+import { ReviewItem } from "./review-item";
 
 export default async function SessionDetailPage({
   params,
 }: {
   params: Promise<{ id: string; sessionId: string }>;
 }) {
-  const { sessionId } = await params;
+  const { id: groupId, sessionId } = await params;
   const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) redirect("/login");
 
   const { data: session } = (await supabase
     .from("sessions")
@@ -30,6 +39,17 @@ export default async function SessionDetailPage({
     .select("*, profiles(nickname)")
     .eq("session_id", sessionId)
     .order("created_at", { ascending: false })) as { data: SessionReviewWithProfile[] | null };
+
+  // 권한 확인
+  const { data: member } = await supabase
+    .from("group_members")
+    .select("role")
+    .eq("group_id", session.group_id)
+    .eq("user_id", user.id)
+    .single();
+
+  const isAdmin = member?.role === "admin";
+  const isPresenter = session.presenter_id === user.id;
 
   const book = session.books;
   const bookContext = book
@@ -73,8 +93,19 @@ export default async function SessionDetailPage({
         </div>
       </div>
 
+      {/* 세션 액션 (편집/삭제/상태변경) */}
+      <SessionActions
+        sessionId={sessionId}
+        groupId={groupId}
+        status={session.status}
+        isAdmin={isAdmin}
+        isPresenter={isPresenter}
+      />
+
       {/* 발제문 */}
-      {session.presentation_text && (
+      {isPresenter ? (
+        <PresentationEditor sessionId={sessionId} initialText={session.presentation_text ?? ""} />
+      ) : session.presentation_text ? (
         <Card>
           <CardContent className="py-4">
             <h2 className="text-muted-foreground mb-2 text-[13px] font-semibold">발제문</h2>
@@ -83,7 +114,7 @@ export default async function SessionDetailPage({
             </div>
           </CardContent>
         </Card>
-      )}
+      ) : null}
 
       {/* AI 에이전트 */}
       {bookContext && (
@@ -107,21 +138,7 @@ export default async function SessionDetailPage({
         {reviews && reviews.length > 0 ? (
           <div className="space-y-3">
             {reviews.map((review) => (
-              <Card key={review.id}>
-                <CardContent className="py-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">
-                      {review.profiles?.nickname ?? "익명"}
-                    </span>
-                    <span className="text-muted-foreground text-xs">
-                      {new Date(review.created_at).toLocaleDateString("ko-KR")}
-                    </span>
-                  </div>
-                  <p className="mt-2 text-[15px] leading-relaxed whitespace-pre-wrap">
-                    {review.content}
-                  </p>
-                </CardContent>
-              </Card>
+              <ReviewItem key={review.id} review={review} isOwner={review.user_id === user.id} />
             ))}
           </div>
         ) : (

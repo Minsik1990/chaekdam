@@ -1,16 +1,24 @@
 import Link from "next/link";
 import Image from "next/image";
-import { notFound } from "next/navigation";
-import { Plus, Calendar, BookOpen, ChevronRight, Share2 } from "lucide-react";
+import { notFound, redirect } from "next/navigation";
+import { Plus, Calendar, BookOpen, ChevronRight, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { createClient } from "@/lib/supabase/server";
 import type { ReadingGroup, SessionWithBook } from "@/lib/supabase/types";
+import { InviteShare } from "@/components/features/invite-share";
+import { GroupActions } from "./group-actions";
 
 export default async function GroupDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) redirect("/login");
 
   const { data: group } = await supabase
     .from("reading_groups")
@@ -31,29 +39,62 @@ export default async function GroupDetailPage({ params }: { params: Promise<{ id
     .select("user_id, role, profiles(nickname)")
     .eq("group_id", id);
 
+  const myRole = members?.find((m) => m.user_id === user.id)?.role;
+  const isAdmin = myRole === "admin";
+
   const upcomingSessions = sessions?.filter((s) => s.status === "upcoming") ?? [];
   const completedSessions = sessions?.filter((s) => s.status === "completed") ?? [];
 
   return (
     <div className="space-y-6">
       {/* 모임 헤더 */}
-      <div>
-        <h1 className="text-[22px] font-bold">{group.name}</h1>
-        {group.description && (
-          <p className="text-muted-foreground mt-1 text-[15px]">{group.description}</p>
-        )}
-        <div className="mt-2 flex items-center gap-2">
-          <Badge variant="secondary" className="text-xs">
-            {members?.length ?? 0}명 참여
-          </Badge>
-          {group.invite_code && (
-            <Badge variant="outline" className="text-xs">
-              <Share2 className="mr-1 h-3 w-3" />
-              {group.invite_code}
-            </Badge>
+      <div className="flex items-start justify-between">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-[22px] font-bold">{group.name}</h1>
+          {group.description && (
+            <p className="text-muted-foreground mt-1 text-[15px]">{group.description}</p>
           )}
         </div>
+        {isAdmin && <GroupActions groupId={id} groupName={group.name} />}
       </div>
+
+      {/* 멤버 + 초대 */}
+      <Card>
+        <CardContent className="py-4">
+          <div className="flex items-center justify-between">
+            <h2 className="flex items-center gap-2 text-sm font-semibold">
+              <Users className="h-4 w-4" />
+              멤버 ({members?.length ?? 0}명)
+            </h2>
+            <div className="flex items-center gap-2">
+              <InviteShare inviteCode={group.invite_code} groupName={group.name} />
+              <Button variant="ghost" size="sm" asChild>
+                <Link href={`/groups/${id}/members`}>전체보기</Link>
+              </Button>
+            </div>
+          </div>
+          <div className="mt-3 flex gap-2">
+            {members?.slice(0, 5).map((member) => {
+              const nickname =
+                (member.profiles as unknown as { nickname: string } | null)?.nickname ?? "?";
+              return (
+                <div
+                  key={member.user_id}
+                  className="bg-primary text-primary-foreground flex h-9 w-9 items-center justify-center rounded-full text-xs font-bold"
+                  title={nickname}
+                >
+                  {nickname.charAt(0)}
+                </div>
+              );
+            })}
+            {(members?.length ?? 0) > 5 && (
+              <div className="bg-muted text-muted-foreground flex h-9 w-9 items-center justify-center rounded-full text-xs">
+                +{(members?.length ?? 0) - 5}
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* 새 세션 추가 */}
       <Button asChild className="w-full">

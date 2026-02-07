@@ -1,21 +1,25 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Send, FileText } from "lucide-react";
+import { Send, FileText, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import type { AgentMessage, BookContext } from "@/lib/agent/types";
 
 interface InterviewChatProps {
   bookContext: BookContext;
+  bookId?: string;
   onSummaryReady: (summary: string) => void;
 }
 
-export function InterviewChat({ bookContext, onSummaryReady }: InterviewChatProps) {
+export function InterviewChat({ bookContext, bookId, onSummaryReady }: InterviewChatProps) {
   const [messages, setMessages] = useState<AgentMessage[]>([]);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
   const [summarizing, setSummarizing] = useState(false);
+  const [summary, setSummary] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -90,12 +94,39 @@ export function InterviewChat({ bookContext, onSummaryReady }: InterviewChatProp
       });
       const data = await res.json();
       if (data.summary) {
+        setSummary(data.summary);
         onSummaryReady(data.summary);
       }
     } catch {
       alert("정리에 실패했어요. 다시 시도해주세요.");
     } finally {
       setSummarizing(false);
+    }
+  }
+
+  async function handleSaveAsRecord() {
+    if (!summary || !bookId) return;
+    setSaving(true);
+    try {
+      const res = await fetch("/api/agent/summarize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages,
+          bookContext,
+          bookId,
+          saveAsRecord: true,
+          existingSummary: summary,
+        }),
+      });
+      const data = await res.json();
+      if (data.recordId) {
+        setSaved(true);
+      }
+    } catch {
+      alert("저장에 실패했어요.");
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -134,19 +165,30 @@ export function InterviewChat({ bookContext, onSummaryReady }: InterviewChatProp
         <div ref={messagesEndRef} />
       </div>
 
-      {/* 정리 버튼 */}
+      {/* 정리/저장 버튼 */}
       {turnCount >= 3 && (
-        <div className="border-t px-4 py-2">
+        <div className="flex gap-2 border-t px-4 py-2">
           <Button
             variant="secondary"
             size="sm"
             onClick={handleSummarize}
-            disabled={summarizing || streaming}
-            className="w-full"
+            disabled={summarizing || streaming || !!summary}
+            className="flex-1"
           >
             <FileText className="mr-1 h-4 w-4" />
-            {summarizing ? "정리하는 중..." : "감상문으로 정리하기"}
+            {summarizing ? "정리 중..." : summary ? "정리 완료" : "감상문으로 정리하기"}
           </Button>
+          {summary && bookId && (
+            <Button
+              size="sm"
+              onClick={handleSaveAsRecord}
+              disabled={saving || saved}
+              className="flex-shrink-0"
+            >
+              <Save className="mr-1 h-4 w-4" />
+              {saving ? "저장 중..." : saved ? "저장됨" : "기록 저장"}
+            </Button>
+          )}
         </div>
       )}
 

@@ -2,10 +2,22 @@ import { NextRequest } from "next/server";
 import { analysisPrompt } from "@/lib/agent/prompts";
 import { createAgentResponse } from "@/lib/agent/stream";
 import { getCachedContent, setCachedContent } from "@/lib/agent/cache";
+import { createClient } from "@/lib/supabase/server";
 import type { BookContext } from "@/lib/agent/types";
 
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      return new Response(JSON.stringify({ error: "로그인이 필요합니다" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
     const { bookContext, bookId } = (await request.json()) as {
       bookContext: BookContext;
       bookId?: string;

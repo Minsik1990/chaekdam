@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { Lightbulb, FileEdit, Brain } from "lucide-react";
+import { useState } from "react";
+import { Lightbulb, FileEdit, Brain, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import type { BookContext } from "@/lib/agent/types";
 
 interface AgentPanelProps {
@@ -18,11 +19,12 @@ export function AgentPanel({ bookContext, bookId }: AgentPanelProps) {
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(false);
   const [userNotes, setUserNotes] = useState("");
-  const contentRef = useRef<HTMLDivElement>(null);
+  const [isCached, setIsCached] = useState(false);
 
-  async function fetchStream(url: string, body: Record<string, unknown>) {
+  async function fetchData(url: string, body: Record<string, unknown>) {
     setContent("");
     setLoading(true);
+    setIsCached(false);
 
     try {
       const res = await fetch(url, {
@@ -31,16 +33,18 @@ export function AgentPanel({ bookContext, bookId }: AgentPanelProps) {
         body: JSON.stringify(body),
       });
 
-      if (!res.ok) {
+      const contentType = res.headers.get("content-type") ?? "";
+
+      // JSON 응답 (캐시된 결과 또는 비스트리밍)
+      if (contentType.includes("application/json")) {
         const data = await res.json();
-        // 캐시된 분석 결과
-        if (data.analysis) {
-          setContent(data.analysis);
-          return;
-        }
-        throw new Error("Failed");
+        const text = data.topics || data.draft || data.analysis || "";
+        setContent(text);
+        if (data.cached) setIsCached(true);
+        return;
       }
 
+      // SSE 스트리밍 응답
       const reader = res.body?.getReader();
       const decoder = new TextDecoder();
       let text = "";
@@ -74,15 +78,19 @@ export function AgentPanel({ bookContext, bookId }: AgentPanelProps) {
   }
 
   function handleTopics() {
-    fetchStream("/api/agent/topics", { bookContext });
+    fetchData("/api/agent/topics", { bookContext, bookId });
   }
 
   function handleDraft() {
-    fetchStream("/api/agent/draft", { bookContext, userNotes: userNotes.trim() || undefined });
+    fetchData("/api/agent/draft", {
+      bookContext,
+      bookId,
+      userNotes: userNotes.trim() || undefined,
+    });
   }
 
   function handleAnalysis() {
-    fetchStream("/api/agent/analysis", { bookContext, bookId });
+    fetchData("/api/agent/analysis", { bookContext, bookId });
   }
 
   return (
@@ -136,8 +144,16 @@ export function AgentPanel({ bookContext, bookId }: AgentPanelProps) {
 
         {/* 결과 표시 */}
         {content && (
-          <div ref={contentRef} className="bg-secondary/50 mt-4 rounded-[14px] p-3">
-            <div className="prose prose-sm max-w-none text-sm whitespace-pre-wrap">{content}</div>
+          <div className="mt-4 space-y-2">
+            {isCached && (
+              <Badge variant="secondary" className="text-[11px]">
+                <Check className="mr-1 h-3 w-3" />
+                캐시됨
+              </Badge>
+            )}
+            <div className="bg-secondary/50 rounded-[14px] p-3">
+              <div className="prose prose-sm max-w-none text-sm whitespace-pre-wrap">{content}</div>
+            </div>
           </div>
         )}
       </CardContent>

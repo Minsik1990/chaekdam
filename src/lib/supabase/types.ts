@@ -4,6 +4,7 @@ export interface Profile {
   id: string;
   nickname: string;
   avatar_url: string | null;
+  bio?: string | null;
   created_at: string;
 }
 
