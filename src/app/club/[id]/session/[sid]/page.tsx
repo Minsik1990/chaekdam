@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
 import { DeleteSessionButton } from "@/components/features/delete-session-button";
 import { SessionComments } from "@/components/features/session-comments";
+import { PhotoUploader } from "@/components/features/photo-uploader";
 import type { Database } from "@/lib/supabase/database.types";
 
 type ClubSession = Database["public"]["Tables"]["club_sessions"]["Row"];
@@ -135,24 +136,13 @@ export default async function SessionDetailPage({
       )}
 
       {/* 사진 */}
-      {session.photos && session.photos.length > 0 && (
-        <div className="bg-card rounded-[20px] p-4 shadow-sm">
-          <h3 className="text-foreground mb-2 text-sm font-semibold">사진</h3>
-          <div className="grid grid-cols-3 gap-2">
-            {session.photos.map((url: string, i: number) => (
-              <div key={i} className="relative aspect-square overflow-hidden rounded-lg">
-                <Image
-                  src={url}
-                  alt={`사진 ${i + 1}`}
-                  fill
-                  sizes="(max-width: 480px) 33vw, 150px"
-                  className="object-cover"
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      <div className="bg-card rounded-[20px] p-4 shadow-sm">
+        <PhotoUploader
+          clubId={clubId}
+          sessionId={sid}
+          initialPhotos={(session.photos as string[] | null) ?? []}
+        />
+      </div>
 
       {/* 후기/댓글 */}
       <div className="bg-card rounded-[20px] p-4 shadow-sm">

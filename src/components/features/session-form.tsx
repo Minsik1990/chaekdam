@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { X, Plus, ImageIcon } from "lucide-react";
+import { X, Plus, ImageIcon, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -50,6 +50,9 @@ export function SessionForm({ clubId, initialData, sessionId }: SessionFormProps
   const [participantInput, setParticipantInput] = useState("");
   const [presentationText, setPresentationText] = useState(initialData?.presentationText ?? "");
   const [content, setContent] = useState(initialData?.content ?? "");
+  const [photoFiles, setPhotoFiles] = useState<File[]>([]);
+  const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
+  const [existingPhotos, setExistingPhotos] = useState<string[]>(initialData?.photos ?? []);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [members, setMembers] = useState<string[]>([]);
@@ -80,6 +83,36 @@ export function SessionForm({ clubId, initialData, sessionId }: SessionFormProps
 
   function removeParticipant(name: string) {
     setParticipants(participants.filter((p) => p !== name));
+  }
+
+  function handlePhotoSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files || []);
+    const totalCount = photoFiles.length + existingPhotos.length + files.length;
+    if (totalCount > 10) {
+      setError("사진은 최대 10장까지 첨부할 수 있습니다.");
+      return;
+    }
+    for (const f of files) {
+      if (f.size > 5 * 1024 * 1024) {
+        setError("파일 크기는 5MB 이하만 가능합니다.");
+        return;
+      }
+    }
+    setError("");
+    const newPreviews = files.map((f) => URL.createObjectURL(f));
+    setPhotoFiles((prev) => [...prev, ...files]);
+    setPhotoPreviews((prev) => [...prev, ...newPreviews]);
+    e.target.value = "";
+  }
+
+  function removeNewPhoto(index: number) {
+    URL.revokeObjectURL(photoPreviews[index]);
+    setPhotoFiles((prev) => prev.filter((_, i) => i !== index));
+    setPhotoPreviews((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  function removeExistingPhoto(index: number) {
+    setExistingPhotos((prev) => prev.filter((_, i) => i !== index));
   }
 
   const filteredMembers = members.filter(
@@ -118,7 +151,7 @@ export function SessionForm({ clubId, initialData, sessionId }: SessionFormProps
         participants,
         presentationText,
         content,
-        photos: [],
+        photos: existingPhotos,
       };
 
       const url = isEdit
@@ -133,12 +166,32 @@ export function SessionForm({ clubId, initialData, sessionId }: SessionFormProps
 
       const data = await res.json();
 
-      if (res.ok) {
-        router.push(`/club/${clubId}/session/${data.session.id}`);
-        router.refresh();
-      } else {
+      if (!res.ok) {
         setError(data.error || "저장에 실패했습니다.");
+        return;
       }
+
+      const savedSessionId = data.session.id;
+
+      // 새 사진이 있으면 업로드
+      if (photoFiles.length > 0) {
+        const formData = new FormData();
+        for (const file of photoFiles) {
+          formData.append("photos", file);
+        }
+        const photoRes = await fetch(`/api/club/${clubId}/sessions/${savedSessionId}/photos`, {
+          method: "POST",
+          body: formData,
+        });
+        if (!photoRes.ok) {
+          const photoData = await photoRes.json();
+          setError(photoData.error || "사진 업로드에 실패했습니다.");
+          return;
+        }
+      }
+
+      router.push(`/club/${clubId}/session/${savedSessionId}`);
+      router.refresh();
     } catch {
       setError("네트워크 오류가 발생했습니다.");
     } finally {
@@ -327,6 +380,61 @@ export function SessionForm({ clubId, initialData, sessionId }: SessionFormProps
           className="bg-input min-h-[100px] border-0"
           maxLength={5000}
         />
+      </div>
+
+      {/* 사진 첨부 */}
+      <div className="space-y-2">
+        <Label>사진</Label>
+        {(existingPhotos.length > 0 || photoPreviews.length > 0) && (
+          <div className="grid grid-cols-4 gap-2">
+            {existingPhotos.map((url, i) => (
+              <div
+                key={`existing-${i}`}
+                className="relative aspect-square overflow-hidden rounded-lg"
+              >
+                <Image src={url} alt={`사진 ${i + 1}`} fill sizes="80px" className="object-cover" />
+                <button
+                  type="button"
+                  onClick={() => removeExistingPhoto(i)}
+                  className="absolute top-1 right-1 rounded-full bg-black/50 p-0.5"
+                >
+                  <X className="h-3 w-3 text-white" />
+                </button>
+              </div>
+            ))}
+            {photoPreviews.map((url, i) => (
+              <div key={`new-${i}`} className="relative aspect-square overflow-hidden rounded-lg">
+                <Image
+                  src={url}
+                  alt={`새 사진 ${i + 1}`}
+                  fill
+                  sizes="80px"
+                  className="object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={() => removeNewPhoto(i)}
+                  className="absolute top-1 right-1 rounded-full bg-black/50 p-0.5"
+                >
+                  <X className="h-3 w-3 text-white" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        {existingPhotos.length + photoFiles.length < 10 && (
+          <label className="border-border text-muted-foreground hover:bg-muted flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-[14px] border-2 border-dashed text-sm">
+            <Camera className="h-4 w-4" />
+            사진 추가 (최대 10장)
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={handlePhotoSelect}
+              className="hidden"
+            />
+          </label>
+        )}
       </div>
 
       {/* 에러 메시지 */}

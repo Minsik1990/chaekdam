@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
-import { BookOpen, Calendar, Users, Mic } from "lucide-react";
+import { BookOpen, Calendar, Users, Mic, UserCheck } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { PresenterChart } from "@/components/features/presenter-chart";
 import type { Database } from "@/lib/supabase/database.types";
 
@@ -52,6 +53,22 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
     .map(([name, count]) => ({ name, count }))
     .sort((a, b) => b.count - a.count);
 
+  // 참여자 통계 (발제 + 참여 합산)
+  const participationCount = new Map<string, number>();
+  for (const s of allSessions) {
+    if (s.presenter) {
+      participationCount.set(s.presenter, (participationCount.get(s.presenter) ?? 0) + 1);
+    }
+    if (s.participants) {
+      for (const p of s.participants as string[]) {
+        participationCount.set(p, (participationCount.get(p) ?? 0) + 1);
+      }
+    }
+  }
+  const memberStats = Array.from(participationCount.entries())
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count);
+
   // 첫 모임, 마지막 모임 날짜
   const firstDate =
     allSessions.length > 0 ? allSessions[allSessions.length - 1].session_date : null;
@@ -80,6 +97,32 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
         <StatCard icon={BookOpen} label="읽은 책" value={totalBooks} unit="권" />
         <StatCard icon={Users} label="멤버" value={totalMembers} unit="명" />
       </div>
+
+      {/* 멤버 참여 현황 */}
+      {memberStats.length > 0 && (
+        <Card className="rounded-[20px]">
+          <CardContent className="pt-6">
+            <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold">
+              <UserCheck className="text-primary h-4 w-4" />
+              멤버 참여 현황
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {memberStats.map((m) => (
+                <Badge
+                  key={m.name}
+                  variant="secondary"
+                  className="gap-1.5 rounded-full py-1.5 pr-2.5 pl-3"
+                >
+                  {m.name}
+                  <span className="bg-primary/10 text-primary inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-xs font-bold">
+                    {m.count}
+                  </span>
+                </Badge>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* 발제자 통계 */}
       {presenterStats.length > 0 && (
