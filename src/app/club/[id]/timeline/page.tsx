@@ -8,7 +8,7 @@ interface SessionWithBook {
   id: string;
   session_number: number | null;
   session_date: string;
-  presenter: string | null;
+  presenter: string[] | null;
   participants: string[];
   books: {
     title: string;
@@ -91,10 +91,10 @@ export default async function TimelinePage({ params }: { params: Promise<{ id: s
                 <Calendar className="h-3 w-3" />
                 {formatDate(session.session_date)}
               </span>
-              {session.presenter && (
+              {session.presenter && session.presenter.length > 0 && (
                 <span className="flex items-center gap-1">
                   <User className="h-3 w-3" />
-                  {session.presenter}
+                  {session.presenter.join(", ")}
                 </span>
               )}
             </div>

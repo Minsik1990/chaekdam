@@ -8,7 +8,7 @@ interface SessionWithBook {
   id: string;
   session_number: number | null;
   session_date: string;
-  presenter: string | null;
+  presenter: string[] | null;
   books: {
     title: string;
     author: string | null;
@@ -81,7 +81,7 @@ export default async function GalleryPage({ params }: { params: Promise<{ id: st
                     {session.books?.title ?? `제${session.session_number}회`}
                   </p>
                   <p className="text-muted-foreground truncate text-[11px]">
-                    {session.presenter ?? ""}
+                    {(session.presenter ?? []).join(", ")}
                   </p>
                 </div>
               </Link>

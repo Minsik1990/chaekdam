@@ -90,11 +90,19 @@ export default async function SessionDetailPage({
           </span>
         </div>
 
-        {session.presenter && (
-          <div className="mt-3 flex items-center gap-2 text-sm">
-            <User className="text-primary h-4 w-4" />
-            <span className="font-medium">발제자:</span>
-            <span>{session.presenter}</span>
+        {session.presenter && session.presenter.length > 0 && (
+          <div className="mt-3 flex items-start gap-2 text-sm">
+            <User className="text-primary mt-0.5 h-4 w-4" />
+            <div>
+              <span className="font-medium">발제자:</span>
+              <div className="mt-1 flex flex-wrap gap-1">
+                {session.presenter.map((p: string) => (
+                  <Badge key={p} variant="secondary" className="rounded-full text-xs">
+                    {p}
+                  </Badge>
+                ))}
+              </div>
+            </div>
           </div>
         )}
 

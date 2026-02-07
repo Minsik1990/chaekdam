@@ -81,7 +81,7 @@ export async function PUT(
     .update({
       book_id: bookId,
       session_date: body.sessionDate,
-      presenter: body.presenter || null,
+      presenter: body.presenter || [],
       participants: body.participants || [],
       presentation_text: body.presentationText || null,
       content: body.content || null,
@@ -99,8 +99,8 @@ export async function PUT(
 
   // 멤버 이름 자동 등록
   const names = new Set<string>();
-  if (body.presenter) names.add(body.presenter);
-  if (body.participants) body.participants.forEach((n: string) => names.add(n));
+  if (body.presenter) (body.presenter as string[]).forEach((n: string) => names.add(n));
+  if (body.participants) (body.participants as string[]).forEach((n: string) => names.add(n));
 
   if (names.size > 0) {
     const membersToInsert = Array.from(names).map((name) => ({

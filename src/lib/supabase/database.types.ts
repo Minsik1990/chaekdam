@@ -60,7 +60,7 @@ export type Database = {
           participants: string[] | null
           photos: string[] | null
           presentation_text: string | null
-          presenter: string | null
+          presenter: string[] | null
           session_date: string
           session_number: number | null
           updated_at: string | null

@@ -39,7 +39,8 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
   // 전체 참여자 수 (유니크)
   const allNames = new Set<string>();
   for (const s of allSessions) {
-    if (s.presenter) allNames.add(s.presenter);
+    const pres = (s.presenter as string[] | null) ?? [];
+    for (const p of pres) allNames.add(p);
     if (s.participants) s.participants.forEach((p: string) => allNames.add(p));
   }
   const totalMembers = allNames.size;
@@ -47,8 +48,9 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
   // 발제자 통계
   const presenterCount = new Map<string, number>();
   for (const s of allSessions) {
-    if (s.presenter) {
-      presenterCount.set(s.presenter, (presenterCount.get(s.presenter) ?? 0) + 1);
+    const pres = (s.presenter as string[] | null) ?? [];
+    for (const p of pres) {
+      presenterCount.set(p, (presenterCount.get(p) ?? 0) + 1);
     }
   }
   const presenterStats = Array.from(presenterCount.entries())
