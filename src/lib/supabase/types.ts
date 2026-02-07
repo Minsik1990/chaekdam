@@ -108,7 +108,7 @@ export interface AgentConversation {
   book_id: string | null;
   session_id: string | null;
   messages: { role: string; content: string; timestamp: string }[];
-  conversation_type: "record_interview" | "group_discussion" | "analysis";
+  conversation_type: "chat" | "interview" | "summarize" | "topics" | "draft" | "analysis";
   created_at: string;
   updated_at: string;
 }

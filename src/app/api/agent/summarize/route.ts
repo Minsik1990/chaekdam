@@ -6,6 +6,18 @@ import type { AgentMessage, BookContext } from "@/lib/agent/types";
 
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return new Response(JSON.stringify({ error: "로그인이 필요합니다" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
     const { messages, bookContext, bookId, saveAsRecord, existingSummary } =
       (await request.json()) as {
         messages: AgentMessage[];
@@ -37,25 +49,18 @@ export async function POST(request: NextRequest) {
     // 기록으로 자동 저장
     let recordId: string | null = null;
     if (saveAsRecord && bookId && summary) {
-      const supabase = await createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const { data } = await supabase
+        .from("records")
+        .insert({
+          user_id: user.id,
+          book_id: bookId,
+          content: summary,
+          status: "completed",
+        })
+        .select("id")
+        .single();
 
-      if (user) {
-        const { data } = await supabase
-          .from("records")
-          .insert({
-            user_id: user.id,
-            book_id: bookId,
-            content: summary,
-            status: "completed",
-          })
-          .select("id")
-          .single();
-
-        recordId = data?.id ?? null;
-      }
+      recordId = data?.id ?? null;
     }
 
     return NextResponse.json({ summary, recordId });

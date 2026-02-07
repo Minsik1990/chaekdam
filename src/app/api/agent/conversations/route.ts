@@ -15,7 +15,8 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const type = searchParams.get("type") ?? undefined;
-    const limit = parseInt(searchParams.get("limit") ?? "20");
+    const parsedLimit = parseInt(searchParams.get("limit") ?? "20");
+    const limit = Math.min(Math.max(1, parsedLimit || 20), 100);
 
     const conversations = await listConversations(user.id, type, limit);
     return NextResponse.json({ conversations });
