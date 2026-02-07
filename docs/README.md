@@ -21,6 +21,7 @@
 | [database-schema.md](design/database-schema.md) | DB 스키마 (Supabase MCP로 업데이트 예정) |
 | [api-design.md](design/api-design.md) | 외부 API 연동 설계 (네이버, 알라딘, Claude 등) |
 | [ui-ux.md](design/ui-ux.md) | UI/UX 디자인 방향 (토스/카카오/Repov 스타일) |
+| [character.md](design/character.md) | 밍들레씨 캐릭터 가이드 (외형, 색상, 톤앤매너, UI 적용) |
 
 ### development/ - 개발
 | 문서 | 설명 |
