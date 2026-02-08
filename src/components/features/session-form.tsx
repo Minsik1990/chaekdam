@@ -340,9 +340,7 @@ export function SessionForm({ clubId, initialData, sessionId }: SessionFormProps
     >
       {/* 책 선택 */}
       <div className="space-y-2">
-        <Label>
-          읽은 책 <span className="text-muted-foreground font-normal">(선택)</span>
-        </Label>
+        <Label>읽은 책</Label>
         {book ? (
           <div className="bg-input flex items-center gap-3 rounded-[14px] p-3">
             {book.coverUrl ? (
@@ -384,7 +382,7 @@ export function SessionForm({ clubId, initialData, sessionId }: SessionFormProps
               }
             />
             <p className="text-muted-foreground text-center text-xs">
-              회고, 회의 등 책 없는 모임은 건너뛰어도 됩니다
+              책 없는 모임은 건너뛰어도 됩니다
             </p>
           </div>
         )}
