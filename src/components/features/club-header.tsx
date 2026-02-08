@@ -14,6 +14,7 @@ interface ClubHeaderProps {
 const tabs = [
   { label: "책장", href: "" },
   { label: "타임라인", href: "/timeline" },
+  { label: "읽고 싶은 책", href: "/wishlist" },
   { label: "프로필", href: "/profile" },
 ];
 

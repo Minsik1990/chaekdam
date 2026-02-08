@@ -30,14 +30,15 @@ export function PersonTimelineDialog({
   clubId,
   trigger,
 }: PersonTimelineDialogProps) {
-  const roleLabel = role === "presenter" ? "발제" : "참여";
+  const isPresenter = role === "presenter";
 
   return (
     <Dialog>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="max-h-[80vh] overflow-y-auto rounded-[20px] sm:max-w-md">
         <DialogTitle className="text-base font-bold">
-          {name}님의 {roleLabel} 기록 ({sessions.length}회)
+          {name}님의{" "}
+          {isPresenter ? `발제 기록 (${sessions.length}회)` : `읽은 책 (${sessions.length}권)`}
         </DialogTitle>
 
         {sessions.length === 0 ? (

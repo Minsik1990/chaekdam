@@ -74,7 +74,7 @@ export type Database = {
           participants?: string[] | null
           photos?: string[] | null
           presentation_text?: string | null
-          presenter?: string | null
+          presenter?: string[] | null
           session_date: string
           session_number?: number | null
           updated_at?: string | null
@@ -88,7 +88,7 @@ export type Database = {
           participants?: string[] | null
           photos?: string[] | null
           presentation_text?: string | null
-          presenter?: string | null
+          presenter?: string[] | null
           session_date?: string
           session_number?: number | null
           updated_at?: string | null
@@ -200,6 +200,74 @@ export type Database = {
             columns: ["session_id"]
             isOneToOne: false
             referencedRelation: "club_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wishlist_books: {
+        Row: {
+          book_id: string
+          club_id: string
+          created_at: string | null
+          id: string
+        }
+        Insert: {
+          book_id: string
+          club_id: string
+          created_at?: string | null
+          id?: string
+        }
+        Update: {
+          book_id?: string
+          club_id?: string
+          created_at?: string | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wishlist_books_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wishlist_books_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "clubs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wishlist_comments: {
+        Row: {
+          author: string
+          content: string
+          created_at: string | null
+          id: string
+          wishlist_book_id: string
+        }
+        Insert: {
+          author: string
+          content: string
+          created_at?: string | null
+          id?: string
+          wishlist_book_id: string
+        }
+        Update: {
+          author?: string
+          content?: string
+          created_at?: string | null
+          id?: string
+          wishlist_book_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wishlist_comments_wishlist_book_id_fkey"
+            columns: ["wishlist_book_id"]
+            isOneToOne: false
+            referencedRelation: "wishlist_books"
             referencedColumns: ["id"]
           },
         ]
