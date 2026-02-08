@@ -37,12 +37,12 @@ export function ClubHeader({ clubId, clubName }: ClubHeaderProps) {
           <Image
             src="/logo-header.png"
             alt="독독"
-            width={100}
-            height={28}
-            className="h-7 w-auto shrink-0"
+            width={120}
+            height={24}
+            className="h-6 w-auto shrink-0"
           />
-          <div className="bg-border h-4 w-px shrink-0" />
-          <h1 className="text-foreground truncate text-sm font-semibold">{clubName}</h1>
+          <div className="bg-border h-5 w-px shrink-0" />
+          <h1 className="text-foreground truncate text-base font-semibold">{clubName}</h1>
         </div>
         <Link
           href={`${basePath}/settings`}
