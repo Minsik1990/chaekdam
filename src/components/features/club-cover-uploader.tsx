@@ -19,11 +19,6 @@ export function ClubCoverUploader({ clubId, initialUrl }: ClubCoverUploaderProps
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 5 * 1024 * 1024) {
-      alert("파일 크기는 5MB 이하만 가능합니다.");
-      return;
-    }
-
     setUploading(true);
     try {
       const compressed = await compressImage(file);

@@ -108,6 +108,9 @@ function SortablePhoto({
 export function PhotoUploader({ clubId, sessionId, initialPhotos }: PhotoUploaderProps) {
   const [photos, setPhotos] = useState<string[]>(initialPhotos);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<{ current: number; total: number } | null>(
+    null
+  );
   const [deleting, setDeleting] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -192,41 +195,48 @@ export function PhotoUploader({ clubId, sessionId, initialPhotos }: PhotoUploade
       return;
     }
 
-    for (const f of files) {
-      if (f.size > 5 * 1024 * 1024) {
-        setError("파일 크기는 5MB 이하만 가능합니다.");
-        return;
-      }
-    }
-
     setError("");
     setUploading(true);
+    setUploadProgress({ current: 0, total: files.length });
 
     try {
-      // 업로드 전 이미지 압축 (1920px, WebP, ~300-500KB)
+      // 전체 이미지 압축 (1920px, WebP, ~300-500KB)
       const compressed = await Promise.all(files.map((f) => compressImage(f)));
 
-      const formData = new FormData();
-      for (const file of compressed) {
-        formData.append("photos", file);
+      // 1장씩 순차 업로드 (Vercel 4.5MB body 제한 대응)
+      let failCount = 0;
+      for (let i = 0; i < compressed.length; i++) {
+        setUploadProgress({ current: i + 1, total: compressed.length });
+
+        const formData = new FormData();
+        formData.append("photos", compressed[i]);
+
+        try {
+          const res = await fetch(`/api/club/${clubId}/sessions/${sessionId}/photos`, {
+            method: "POST",
+            body: formData,
+          });
+
+          const data = await res.json();
+
+          if (res.ok) {
+            setPhotos(data.photos);
+          } else {
+            failCount++;
+          }
+        } catch {
+          failCount++;
+        }
       }
 
-      const res = await fetch(`/api/club/${clubId}/sessions/${sessionId}/photos`, {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        setPhotos(data.photos);
-      } else {
-        setError(data.error || "업로드에 실패했습니다.");
+      if (failCount > 0) {
+        setError(`${failCount}장 업로드에 실패했습니다.`);
       }
     } catch {
-      setError("네트워크 오류가 발생했습니다.");
+      setError("이미지 처리 중 오류가 발생했습니다.");
     } finally {
       setUploading(false);
+      setUploadProgress(null);
       if (inputRef.current) inputRef.current.value = "";
     }
   }
@@ -276,7 +286,11 @@ export function PhotoUploader({ clubId, sessionId, initialPhotos }: PhotoUploade
             ) : (
               <Camera className="h-3.5 w-3.5" />
             )}
-            {uploading ? "업로드 중..." : "사진 추가"}
+            {uploading && uploadProgress
+              ? `${uploadProgress.current}/${uploadProgress.total}장 업로드 중...`
+              : uploading
+                ? "압축 중..."
+                : "사진 추가"}
           </button>
         )}
         <input
