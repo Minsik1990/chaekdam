@@ -36,7 +36,7 @@ export default async function SessionDetailPage({
       .maybeSingle(),
     supabase
       .from("club_sessions")
-      .select("session_date")
+      .select("session_date, is_counted")
       .eq("club_id", clubId)
       .order("session_date", { ascending: true }),
   ]);
@@ -46,8 +46,9 @@ export default async function SessionDetailPage({
   const session = sessionResult.data as unknown as SessionWithBook;
   const book = session.books;
 
-  // 날짜 기반 모임 회차 계산
-  const uniqueDates = [...new Set((allDatesResult.data ?? []).map((s) => s.session_date))].sort();
+  // 날짜 기반 모임 회차 계산 (is_counted=false 세션 제외)
+  const countedDateSessions = (allDatesResult.data ?? []).filter((s) => s.is_counted !== false);
+  const uniqueDates = [...new Set(countedDateSessions.map((s) => s.session_date))].sort();
   const dateToMeetingNum = new Map<string, number>();
   uniqueDates.forEach((date, i) => dateToMeetingNum.set(date, i + 1));
   const meetingNumber = dateToMeetingNum.get(session.session_date) ?? 0;
@@ -95,9 +96,11 @@ export default async function SessionDetailPage({
       {/* 모임 정보 */}
       <div className="bg-card rounded-[20px] p-4 shadow-sm">
         <div className="flex items-center gap-2">
-          <Badge variant="secondary" className="rounded-full">
-            #{meetingNumber}회
-          </Badge>
+          {session.is_counted !== false && (
+            <Badge variant="secondary" className="rounded-full">
+              #{meetingNumber}회
+            </Badge>
+          )}
           <span className="text-muted-foreground flex items-center gap-1 text-sm">
             <Calendar className="h-3.5 w-3.5" />
             {formatDate(session.session_date)}

@@ -36,6 +36,7 @@ interface SessionFormData {
   bookId?: string | null;
   book?: BookInfo | null;
   sessionDate: string;
+  isCounted?: boolean;
   presenter: string[];
   participants: string[];
   presentationText: string;
@@ -110,6 +111,7 @@ export function SessionForm({ clubId, initialData, sessionId }: SessionFormProps
         .toISOString()
         .split("T")[0]
   );
+  const [isCounted, setIsCounted] = useState(initialData?.isCounted ?? true);
   const [presenters, setPresenters] = useState<string[]>(initialData?.presenter ?? []);
   const [presenterInput, setPresenterInput] = useState("");
   const presenterValueRef = useRef("");
@@ -276,6 +278,7 @@ export function SessionForm({ clubId, initialData, sessionId }: SessionFormProps
             }
           : null,
         sessionDate,
+        isCounted,
         presenter: presenters,
         participants,
         presentationText,
@@ -400,6 +403,20 @@ export function SessionForm({ clubId, initialData, sessionId }: SessionFormProps
           required
         />
       </div>
+
+      {/* 모임 횟수 포함 여부 */}
+      <label className="flex items-center gap-3 px-1">
+        <input
+          type="checkbox"
+          checked={isCounted}
+          onChange={(e) => setIsCounted(e.target.checked)}
+          className="accent-primary h-5 w-5 rounded"
+        />
+        <div>
+          <span className="text-sm font-medium">모임 횟수에 포함</span>
+          <p className="text-muted-foreground text-xs">해제하면 회차 번호와 통계에서 제외됩니다</p>
+        </div>
+      </label>
 
       {/* 발제자 */}
       <div className="space-y-2">

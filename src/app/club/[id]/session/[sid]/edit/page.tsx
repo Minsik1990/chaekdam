@@ -40,6 +40,7 @@ export default async function EditSessionPage({
         }
       : null,
     sessionDate: session.session_date,
+    isCounted: session.is_counted,
     presenter: (session.presenter as string[] | null) ?? [],
     participants: session.participants ?? [],
     presentationText: session.presentation_text ?? "",

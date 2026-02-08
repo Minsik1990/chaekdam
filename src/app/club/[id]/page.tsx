@@ -8,6 +8,7 @@ interface SessionWithBook {
   id: string;
   session_number: number | null;
   session_date: string;
+  is_counted: boolean;
   presenter: string[] | null;
   books: {
     title: string;
@@ -22,15 +23,18 @@ export default async function GalleryPage({ params }: { params: Promise<{ id: st
 
   const { data: sessions } = await supabase
     .from("club_sessions")
-    .select("id, session_number, session_date, presenter, books(title, author, cover_image_url)")
+    .select(
+      "id, session_number, session_date, is_counted, presenter, books(title, author, cover_image_url)"
+    )
     .eq("club_id", clubId)
     .not("book_id", "is", null)
     .order("session_date", { ascending: false });
 
   const typedSessions = (sessions ?? []) as unknown as SessionWithBook[];
 
-  // 날짜 기반 모임 회차 계산
-  const uniqueDates = [...new Set(typedSessions.map((s) => s.session_date))].sort();
+  // 날짜 기반 모임 회차 계산 (is_counted=false 세션 제외)
+  const countedSessions = typedSessions.filter((s) => s.is_counted !== false);
+  const uniqueDates = [...new Set(countedSessions.map((s) => s.session_date))].sort();
   const dateToMeetingNum = new Map<string, number>();
   uniqueDates.forEach((date, i) => dateToMeetingNum.set(date, i + 1));
 

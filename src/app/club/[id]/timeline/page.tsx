@@ -8,6 +8,7 @@ interface SessionWithBook {
   id: string;
   session_number: number | null;
   session_date: string;
+  is_counted: boolean;
   presenter: string[] | null;
   participants: string[];
   content: string | null;
@@ -30,15 +31,16 @@ export default async function TimelinePage({ params }: { params: Promise<{ id: s
   const { data: sessions } = await supabase
     .from("club_sessions")
     .select(
-      "id, session_number, session_date, presenter, participants, content, books(title, author, cover_image_url)"
+      "id, session_number, session_date, is_counted, presenter, participants, content, books(title, author, cover_image_url)"
     )
     .eq("club_id", clubId)
     .order("session_date", { ascending: false });
 
   const typedSessions = (sessions ?? []) as unknown as SessionWithBook[];
 
-  // 날짜 기반 모임 회차 계산
-  const uniqueDates = [...new Set(typedSessions.map((s) => s.session_date))].sort();
+  // 날짜 기반 모임 회차 계산 (is_counted=false 세션 제외)
+  const countedSessions = typedSessions.filter((s) => s.is_counted !== false);
+  const uniqueDates = [...new Set(countedSessions.map((s) => s.session_date))].sort();
   const dateToMeetingNum = new Map<string, number>();
   uniqueDates.forEach((date, i) => dateToMeetingNum.set(date, i + 1));
 
@@ -85,9 +87,11 @@ export default async function TimelinePage({ params }: { params: Promise<{ id: s
                   session.content?.split("\n").find((line) => line.trim()) ??
                   `제${dateToMeetingNum.get(session.session_date) ?? 0}회 모임`}
               </h3>
-              <span className="bg-secondary text-secondary-foreground flex-shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium">
-                #{dateToMeetingNum.get(session.session_date) ?? 0}
-              </span>
+              {session.is_counted !== false && (
+                <span className="bg-secondary text-secondary-foreground flex-shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium">
+                  #{dateToMeetingNum.get(session.session_date) ?? 0}
+                </span>
+              )}
             </div>
             {session.books?.author && (
               <p className="text-muted-foreground mt-0.5 truncate text-xs">

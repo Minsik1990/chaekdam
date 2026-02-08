@@ -22,7 +22,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
     supabase
       .from("club_sessions")
       .select(
-        "id, session_date, presenter, participants, book_id, photos, content, books(title, author, cover_image_url)"
+        "id, session_date, is_counted, presenter, participants, book_id, photos, content, books(title, author, cover_image_url)"
       )
       .eq("club_id", clubId)
       .order("session_date", { ascending: false }),
@@ -35,6 +35,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
   const allSessions = rawSessions as unknown as {
     id: string;
     session_date: string;
+    is_counted: boolean;
     presenter: string[] | null;
     participants: string[] | null;
     book_id: string | null;
@@ -44,20 +45,21 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
   }[];
   const memberNames = (membersResult.data ?? []).map((m) => m.name);
 
-  // 통계 계산: 같은 날짜 = 1번의 모임
-  const uniqueDates = [...new Set(allSessions.map((s) => s.session_date))].sort();
+  // 통계 계산: is_counted=false 세션 제외, 같은 날짜 = 1번의 모임
+  const countedSessions = allSessions.filter((s) => s.is_counted !== false);
+  const uniqueDates = [...new Set(countedSessions.map((s) => s.session_date))].sort();
   const totalMeetings = uniqueDates.length;
   const dateToMeetingNum = new Map<string, number>();
   uniqueDates.forEach((date, i) => dateToMeetingNum.set(date, i + 1));
 
-  const uniqueBookIds = new Set(allSessions.map((s) => s.book_id).filter(Boolean));
+  const uniqueBookIds = new Set(countedSessions.map((s) => s.book_id).filter(Boolean));
   const totalBooks = uniqueBookIds.size;
 
   const totalMembers = memberNames.length;
 
-  // 발제자 통계
+  // 발제자 통계 (is_counted=false 세션 제외)
   const presenterCount = new Map<string, number>();
-  for (const s of allSessions) {
+  for (const s of countedSessions) {
     const pres = s.presenter ?? [];
     for (const p of pres) {
       presenterCount.set(p, (presenterCount.get(p) ?? 0) + 1);
@@ -67,9 +69,9 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
     .map(([name, count]) => ({ name, count }))
     .sort((a, b) => b.count - a.count);
 
-  // 참여자 통계 (참여만, 발제 제외) — 책이 있는 세션만
+  // 참여자 통계 (참여만, 발제 제외) — 책이 있는 counted 세션만
   const participationCount = new Map<string, number>();
-  for (const s of allSessions) {
+  for (const s of countedSessions) {
     if (!s.book_id) continue;
     const parts = s.participants ?? [];
     for (const p of parts) {
@@ -80,9 +82,9 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
     .map(([name, count]) => ({ name, count }))
     .sort((a, b) => b.count - a.count);
 
-  // 연간 모임 횟수 계산
+  // 연간 모임 횟수 계산 (is_counted=false 세션 제외)
   const yearlyMeetings = new Map<string, Set<string>>();
-  for (const s of allSessions) {
+  for (const s of countedSessions) {
     const year = s.session_date.slice(0, 4);
     if (!yearlyMeetings.has(year)) yearlyMeetings.set(year, new Set());
     yearlyMeetings.get(year)!.add(s.session_date);
@@ -91,8 +93,8 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
     .map(([year, dates]) => ({ year, count: dates.size }))
     .sort((a, b) => a.year.localeCompare(b.year));
 
-  // Client Component에 전달할 세션 데이터 (books 포함)
-  const sessionsForClient = allSessions.map((s) => ({
+  // Client Component에 전달할 세션 데이터 (counted 세션만, books 포함)
+  const sessionsForClient = countedSessions.map((s) => ({
     id: s.id,
     session_date: s.session_date,
     presenter: s.presenter,

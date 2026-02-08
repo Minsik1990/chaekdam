@@ -115,6 +115,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       presentation_text: body.presentationText || null,
       content: body.content || null,
       photos: body.photos || [],
+      is_counted: body.isCounted ?? true,
     })
     .select()
     .single();

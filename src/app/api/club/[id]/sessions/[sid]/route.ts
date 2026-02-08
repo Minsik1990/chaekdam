@@ -94,6 +94,7 @@ export async function PUT(
       presentation_text: body.presentationText || null,
       content: body.content || null,
       photos: body.photos || [],
+      is_counted: body.isCounted ?? true,
       updated_at: new Date().toISOString(),
     })
     .eq("id", sid)

@@ -60,6 +60,7 @@ export type Database = {
           content: string | null
           created_at: string | null
           id: string
+          is_counted: boolean
           participants: string[] | null
           photos: string[] | null
           presentation_text: string | null
@@ -74,6 +75,7 @@ export type Database = {
           content?: string | null
           created_at?: string | null
           id?: string
+          is_counted?: boolean
           participants?: string[] | null
           photos?: string[] | null
           presentation_text?: string | null
@@ -88,6 +90,7 @@ export type Database = {
           content?: string | null
           created_at?: string | null
           id?: string
+          is_counted?: boolean
           participants?: string[] | null
           photos?: string[] | null
           presentation_text?: string | null
