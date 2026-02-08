@@ -3,13 +3,24 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { X, Plus, ImageIcon, Camera } from "lucide-react";
+import { X, Plus, ImageIcon, Camera, GripVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { BookSearch } from "./book-search";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import { SortableContext, useSortable, rectSortingStrategy, arrayMove } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 interface BookInfo {
   isbn: string;
@@ -35,6 +46,56 @@ interface SessionFormProps {
   clubId: string;
   initialData?: SessionFormData;
   sessionId?: string;
+}
+
+function SortablePhotoItem({
+  id,
+  src,
+  alt,
+  onRemove,
+}: {
+  id: string;
+  src: string;
+  alt: string;
+  onRemove: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id,
+  });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="relative aspect-square overflow-hidden rounded-lg"
+    >
+      <Image src={src} alt={alt} fill sizes="80px" className="object-cover" />
+      <button
+        type="button"
+        {...attributes}
+        {...listeners}
+        className="absolute bottom-0 left-0 flex min-h-[44px] min-w-[44px] touch-none items-end justify-start p-1.5"
+      >
+        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-black/50">
+          <GripVertical className="h-3 w-3 text-white" />
+        </span>
+      </button>
+      <button
+        type="button"
+        onClick={onRemove}
+        className="absolute top-0 right-0 flex min-h-[44px] min-w-[44px] items-start justify-end p-1.5"
+      >
+        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-black/50">
+          <X className="h-3 w-3 text-white" />
+        </span>
+      </button>
+    </div>
+  );
 }
 
 export function SessionForm({ clubId, initialData, sessionId }: SessionFormProps) {
@@ -63,6 +124,36 @@ export function SessionForm({ clubId, initialData, sessionId }: SessionFormProps
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [members, setMembers] = useState<string[]>([]);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } })
+  );
+
+  // 드래그 결과로 사진 순서 변경 (기존/새 사진 각각 그룹 내에서만)
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const activeId = String(active.id);
+    const overId = String(over.id);
+
+    // 기존 사진끼리 순서 변경
+    if (activeId.startsWith("existing-") && overId.startsWith("existing-")) {
+      const oldIndex = parseInt(activeId.replace("existing-", ""));
+      const newIndex = parseInt(overId.replace("existing-", ""));
+      setExistingPhotos((prev) => arrayMove(prev, oldIndex, newIndex));
+      return;
+    }
+
+    // 새 사진끼리 순서 변경
+    if (activeId.startsWith("new-") && overId.startsWith("new-")) {
+      const oldIndex = parseInt(activeId.replace("new-", ""));
+      const newIndex = parseInt(overId.replace("new-", ""));
+      setPhotoFiles((prev) => arrayMove(prev, oldIndex, newIndex));
+      setPhotoPreviews((prev) => arrayMove(prev, oldIndex, newIndex));
+    }
+  }
 
   const loadMembers = useCallback(async () => {
     try {
@@ -489,41 +580,40 @@ export function SessionForm({ clubId, initialData, sessionId }: SessionFormProps
       <div className="space-y-2">
         <Label>사진</Label>
         {(existingPhotos.length > 0 || photoPreviews.length > 0) && (
-          <div className="grid grid-cols-4 gap-2">
-            {existingPhotos.map((url, i) => (
-              <div
-                key={`existing-${i}`}
-                className="relative aspect-square overflow-hidden rounded-lg"
-              >
-                <Image src={url} alt={`사진 ${i + 1}`} fill sizes="80px" className="object-cover" />
-                <button
-                  type="button"
-                  onClick={() => removeExistingPhoto(i)}
-                  className="absolute top-1 right-1 rounded-full bg-black/50 p-0.5"
-                >
-                  <X className="h-3 w-3 text-white" />
-                </button>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={[
+                ...existingPhotos.map((_, i) => `existing-${i}`),
+                ...photoPreviews.map((_, i) => `new-${i}`),
+              ]}
+              strategy={rectSortingStrategy}
+            >
+              <div className="grid grid-cols-4 gap-2">
+                {existingPhotos.map((url, i) => (
+                  <SortablePhotoItem
+                    key={`existing-${i}`}
+                    id={`existing-${i}`}
+                    src={url}
+                    alt={`사진 ${i + 1}`}
+                    onRemove={() => removeExistingPhoto(i)}
+                  />
+                ))}
+                {photoPreviews.map((url, i) => (
+                  <SortablePhotoItem
+                    key={`new-${i}`}
+                    id={`new-${i}`}
+                    src={url}
+                    alt={`새 사진 ${i + 1}`}
+                    onRemove={() => removeNewPhoto(i)}
+                  />
+                ))}
               </div>
-            ))}
-            {photoPreviews.map((url, i) => (
-              <div key={`new-${i}`} className="relative aspect-square overflow-hidden rounded-lg">
-                <Image
-                  src={url}
-                  alt={`새 사진 ${i + 1}`}
-                  fill
-                  sizes="80px"
-                  className="object-cover"
-                />
-                <button
-                  type="button"
-                  onClick={() => removeNewPhoto(i)}
-                  className="absolute top-1 right-1 rounded-full bg-black/50 p-0.5"
-                >
-                  <X className="h-3 w-3 text-white" />
-                </button>
-              </div>
-            ))}
-          </div>
+            </SortableContext>
+          </DndContext>
         )}
         {existingPhotos.length + photoFiles.length < 10 && (
           <>

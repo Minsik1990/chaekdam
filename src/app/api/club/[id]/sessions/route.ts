@@ -67,18 +67,31 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
   }
 
-  // 세션 번호 자동 계산
+  // 세션 번호 자동 계산: 같은 날짜의 기존 세션이 있으면 동일 번호 부여
   let sessionNumber = body.sessionNumber;
   if (!sessionNumber) {
-    const { data: maxSession } = await supabase
+    // 같은 날짜에 이미 세션이 있는지 확인
+    const { data: sameDateSession } = await supabase
       .from("club_sessions")
       .select("session_number")
       .eq("club_id", clubId)
-      .order("session_number", { ascending: false })
+      .eq("session_date", body.sessionDate)
       .limit(1)
       .maybeSingle();
 
-    sessionNumber = (maxSession?.session_number ?? 0) + 1;
+    if (sameDateSession?.session_number) {
+      sessionNumber = sameDateSession.session_number;
+    } else {
+      const { data: maxSession } = await supabase
+        .from("club_sessions")
+        .select("session_number")
+        .eq("club_id", clubId)
+        .order("session_number", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      sessionNumber = (maxSession?.session_number ?? 0) + 1;
+    }
   }
 
   // 세션 생성

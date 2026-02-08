@@ -26,17 +26,31 @@ export default async function SessionDetailPage({
   const { id: clubId, sid } = await params;
   const supabase = createClient();
 
-  const { data } = await supabase
-    .from("club_sessions")
-    .select("*, books(*)")
-    .eq("id", sid)
-    .eq("club_id", clubId)
-    .maybeSingle();
+  const [sessionResult, allDatesResult] = await Promise.all([
+    supabase
+      .from("club_sessions")
+      .select("*, books(*)")
+      .eq("id", sid)
+      .eq("club_id", clubId)
+      .maybeSingle(),
+    supabase
+      .from("club_sessions")
+      .select("session_date")
+      .eq("club_id", clubId)
+      .order("session_date", { ascending: true }),
+  ]);
 
-  if (!data) notFound();
+  if (!sessionResult.data) notFound();
 
-  const session = data as unknown as SessionWithBook;
+  const session = sessionResult.data as unknown as SessionWithBook;
   const book = session.books;
+
+  // 날짜 기반 모임 회차 계산
+  const uniqueDates = [...new Set((allDatesResult.data ?? []).map((s) => s.session_date))].sort();
+  const totalMeetings = uniqueDates.length;
+  const dateToMeetingNum = new Map<string, number>();
+  uniqueDates.forEach((date, i) => dateToMeetingNum.set(date, i + 1));
+  const meetingNumber = totalMeetings - (dateToMeetingNum.get(session.session_date) ?? 0) + 1;
 
   return (
     <div className="space-y-6">
@@ -82,7 +96,7 @@ export default async function SessionDetailPage({
       <div className="bg-card rounded-[20px] p-4 shadow-sm">
         <div className="flex items-center gap-2">
           <Badge variant="secondary" className="rounded-full">
-            #{session.session_number}회
+            #{meetingNumber}회
           </Badge>
           <span className="text-muted-foreground flex items-center gap-1 text-sm">
             <Calendar className="h-3.5 w-3.5" />

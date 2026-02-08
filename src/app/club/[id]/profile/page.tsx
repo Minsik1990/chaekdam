@@ -1,11 +1,13 @@
-import Image from "next/image";
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { BookOpen, Calendar, Users, Mic, ImageIcon } from "lucide-react";
+import { notFound } from "next/navigation";
+import { BookOpen, Calendar, Users, ImageIcon } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { ClubCoverUploader } from "@/components/features/club-cover-uploader";
 import { MemberManager } from "@/components/features/member-manager";
+import { ProfilePhotoGrid } from "@/components/features/profile-photo-grid";
+import { MemberBooksSection } from "@/components/features/member-books-section";
+import { PresenterStatsSection } from "@/components/features/presenter-stats-section";
+import { YearlyMeetingChart } from "@/components/features/yearly-meeting-chart";
 import type { Database } from "@/lib/supabase/database.types";
 
 type Club = Database["public"]["Tables"]["clubs"]["Row"];
@@ -14,23 +16,39 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
   const { id: clubId } = await params;
   const supabase = createClient();
 
-  // 모임 정보 + 세션 + 멤버 병렬 조회
+  // 모임 정보 + 세션(books JOIN) + 멤버 병렬 조회
   const [clubResult, sessionsResult, membersResult] = await Promise.all([
     supabase.from("clubs").select("*").eq("id", clubId).maybeSingle(),
     supabase
       .from("club_sessions")
-      .select("id, session_date, presenter, participants, book_id, photos")
+      .select(
+        "id, session_date, presenter, participants, book_id, photos, books(title, author, cover_image_url)"
+      )
       .eq("club_id", clubId)
       .order("session_date", { ascending: false }),
     supabase.from("members").select("name").eq("club_id", clubId).order("name"),
   ]);
 
   const club = clubResult.data as Club | null;
-  const allSessions = sessionsResult.data ?? [];
+  if (!club) notFound();
+  const rawSessions = sessionsResult.data ?? [];
+  const allSessions = rawSessions as unknown as {
+    id: string;
+    session_date: string;
+    presenter: string[] | null;
+    participants: string[] | null;
+    book_id: string | null;
+    photos: string[] | null;
+    books: { title: string; author: string | null; cover_image_url: string | null } | null;
+  }[];
   const memberNames = (membersResult.data ?? []).map((m) => m.name);
 
-  // 통계 계산
-  const totalSessions = allSessions.length;
+  // 통계 계산: 같은 날짜 = 1번의 모임
+  const uniqueDates = [...new Set(allSessions.map((s) => s.session_date))].sort();
+  const totalMeetings = uniqueDates.length;
+  const dateToMeetingNum = new Map<string, number>();
+  uniqueDates.forEach((date, i) => dateToMeetingNum.set(date, i + 1));
+
   const uniqueBookIds = new Set(allSessions.map((s) => s.book_id).filter(Boolean));
   const totalBooks = uniqueBookIds.size;
 
@@ -39,7 +57,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
   // 발제자 통계
   const presenterCount = new Map<string, number>();
   for (const s of allSessions) {
-    const pres = (s.presenter as string[] | null) ?? [];
+    const pres = s.presenter ?? [];
     for (const p of pres) {
       presenterCount.set(p, (presenterCount.get(p) ?? 0) + 1);
     }
@@ -51,22 +69,42 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
   // 참여자 통계 (참여만, 발제 제외)
   const participationCount = new Map<string, number>();
   for (const s of allSessions) {
-    if (s.participants) {
-      for (const p of s.participants as string[]) {
-        participationCount.set(p, (participationCount.get(p) ?? 0) + 1);
-      }
+    const parts = s.participants ?? [];
+    for (const p of parts) {
+      participationCount.set(p, (participationCount.get(p) ?? 0) + 1);
     }
   }
   const memberStats = Array.from(participationCount.entries())
     .map(([name, count]) => ({ name, count }))
     .sort((a, b) => b.count - a.count);
 
+  // 연간 모임 횟수 계산
+  const yearlyMeetings = new Map<string, Set<string>>();
+  for (const s of allSessions) {
+    const year = s.session_date.slice(0, 4);
+    if (!yearlyMeetings.has(year)) yearlyMeetings.set(year, new Set());
+    yearlyMeetings.get(year)!.add(s.session_date);
+  }
+  const yearlyData = Array.from(yearlyMeetings.entries())
+    .map(([year, dates]) => ({ year, count: dates.size }))
+    .sort((a, b) => a.year.localeCompare(b.year));
+
+  // Client Component에 전달할 세션 데이터 (books 포함)
+  const sessionsForClient = allSessions.map((s) => ({
+    id: s.id,
+    session_date: s.session_date,
+    presenter: s.presenter,
+    participants: s.participants,
+    book: s.books,
+  }));
+
   // 전체 사진 수집 (최신 세션 먼저 = 갤러리와 동일)
   const allPhotos: { url: string; sessionId: string; sessionOrder: number }[] = [];
   for (let i = 0; i < allSessions.length; i++) {
     const s = allSessions[i];
     const photos = (s.photos as string[] | null) ?? [];
-    const order = allSessions.length - i; // 회차 번호 (1회, 2회, ...)
+    const meetingNum = dateToMeetingNum.get(s.session_date) ?? 0;
+    const order = meetingNum;
     for (const url of photos) {
       allPhotos.push({ url, sessionId: s.id, sessionOrder: order });
     }
@@ -99,7 +137,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
 
       {/* 주요 통계 */}
       <div className="grid grid-cols-3 gap-3">
-        <StatCard icon={Calendar} label="모임" value={totalSessions} unit="회" />
+        <StatCard icon={Calendar} label="모임" value={totalMeetings} unit="회" />
         <StatCard icon={BookOpen} label="읽은 책" value={totalBooks} unit="권" />
         <StatCard icon={Users} label="멤버" value={totalMembers} unit="명" />
       </div>
@@ -117,58 +155,24 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
 
       {/* 우리가 함께 읽은 책 */}
       {memberStats.length > 0 && (
-        <Card className="rounded-[20px]">
-          <CardContent className="pt-6">
-            <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold">
-              <BookOpen className="text-primary h-4 w-4" />
-              우리가 함께 읽은 책
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              {memberStats.map((m) => (
-                <Badge
-                  key={m.name}
-                  variant="secondary"
-                  className="gap-1.5 rounded-full py-1.5 pr-2.5 pl-3"
-                >
-                  {m.name}
-                  <span className="bg-primary/10 text-primary inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-xs font-bold">
-                    {m.count}권
-                  </span>
-                </Badge>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        <MemberBooksSection
+          memberStats={memberStats}
+          sessions={sessionsForClient}
+          clubId={clubId}
+        />
       )}
 
       {/* 발제 횟수 */}
       {presenterStats.length > 0 && (
-        <Card className="rounded-[20px]">
-          <CardContent className="pt-6">
-            <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold">
-              <Mic className="text-primary h-4 w-4" />
-              발제 횟수
-            </h3>
-            <div className="space-y-2.5">
-              {presenterStats.map((m) => (
-                <div key={m.name} className="flex items-center gap-3">
-                  <span className="w-16 shrink-0 truncate text-sm font-medium">{m.name}</span>
-                  <div className="bg-muted h-7 flex-1 overflow-hidden rounded-full">
-                    <div
-                      className="bg-primary flex h-full items-center rounded-full px-2.5 transition-all"
-                      style={{
-                        width: `${Math.max((m.count / presenterStats[0].count) * 100, 15)}%`,
-                      }}
-                    >
-                      <span className="text-xs font-bold text-white">{m.count}회</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        <PresenterStatsSection
+          presenterStats={presenterStats}
+          sessions={sessionsForClient}
+          clubId={clubId}
+        />
       )}
+
+      {/* 연간 모임 */}
+      <YearlyMeetingChart data={yearlyData} />
 
       {/* 모임 사진 */}
       <Card className="rounded-[20px]">
@@ -178,26 +182,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
             모임 사진 {allPhotos.length > 0 && `(${allPhotos.length})`}
           </h3>
           {allPhotos.length > 0 ? (
-            <div className="grid grid-cols-3 gap-2">
-              {allPhotos.slice(0, 12).map((photo, i) => (
-                <Link
-                  key={i}
-                  href={`/club/${clubId}/session/${photo.sessionId}`}
-                  className="relative aspect-square overflow-hidden rounded-lg"
-                >
-                  <Image
-                    src={photo.url}
-                    alt={`모임 사진 ${i + 1}`}
-                    fill
-                    sizes="(max-width: 480px) 33vw, 120px"
-                    className="object-cover"
-                  />
-                  <span className="absolute right-1 bottom-1 rounded-full bg-black/50 px-1.5 py-0.5 text-[10px] font-medium text-white">
-                    #{photo.sessionOrder}
-                  </span>
-                </Link>
-              ))}
-            </div>
+            <ProfilePhotoGrid photos={allPhotos} clubId={clubId} />
           ) : (
             <p className="text-muted-foreground py-4 text-center text-sm">
               아직 모임 사진이 없습니다. 세션 상세에서 사진을 추가해보세요!

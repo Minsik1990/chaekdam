@@ -36,6 +36,12 @@ export default async function TimelinePage({ params }: { params: Promise<{ id: s
 
   const typedSessions = (sessions ?? []) as unknown as SessionWithBook[];
 
+  // 날짜 기반 모임 회차 계산
+  const uniqueDates = [...new Set(typedSessions.map((s) => s.session_date))].sort();
+  const dateToMeetingNum = new Map<string, number>();
+  uniqueDates.forEach((date, i) => dateToMeetingNum.set(date, i + 1));
+  const totalMeetings = uniqueDates.length;
+
   if (typedSessions.length === 0) {
     return (
       <EmptyState
@@ -48,7 +54,7 @@ export default async function TimelinePage({ params }: { params: Promise<{ id: s
 
   return (
     <div className="space-y-3">
-      {typedSessions.map((session, index) => (
+      {typedSessions.map((session) => (
         <Link
           key={session.id}
           href={`/club/${clubId}/session/${session.id}`}
@@ -75,10 +81,11 @@ export default async function TimelinePage({ params }: { params: Promise<{ id: s
           <div className="min-w-0 flex-1">
             <div className="flex items-start justify-between gap-2">
               <h3 className="truncate text-sm font-semibold">
-                {session.books?.title ?? `제${typedSessions.length - index}회 모임`}
+                {session.books?.title ??
+                  `제${totalMeetings - (dateToMeetingNum.get(session.session_date) ?? 0) + 1}회 모임`}
               </h3>
               <span className="bg-secondary text-secondary-foreground flex-shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium">
-                #{typedSessions.length - index}
+                #{totalMeetings - (dateToMeetingNum.get(session.session_date) ?? 0) + 1}
               </span>
             </div>
             {session.books?.author && (
