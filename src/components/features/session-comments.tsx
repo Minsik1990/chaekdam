@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { MessageCircle, Send } from "lucide-react";
+import { MessageCircle, Send, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -37,6 +37,7 @@ export function SessionComments({ clubId, sessionId }: SessionCommentsProps) {
   const [author, setAuthor] = useState("");
   const [content, setContent] = useState("");
   const [sending, setSending] = useState(false);
+  const [deleting, setDeleting] = useState<string | null>(null);
   const [error, setError] = useState("");
 
   const loadComments = useCallback(async () => {
@@ -59,7 +60,30 @@ export function SessionComments({ clubId, sessionId }: SessionCommentsProps) {
     if (saved) setAuthor(saved);
   }, []);
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleDelete(commentId: string) {
+    if (deleting) return;
+    setDeleting(commentId);
+    setError("");
+    try {
+      const res = await fetch(`/api/club/${clubId}/sessions/${sessionId}/comments`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ commentId }),
+      });
+      if (res.ok) {
+        setComments((prev) => prev.filter((c) => c.id !== commentId));
+      } else {
+        const data = await res.json();
+        setError(data.error || "삭제에 실패했습니다.");
+      }
+    } catch {
+      setError("네트워크 오류가 발생했습니다.");
+    } finally {
+      setDeleting(null);
+    }
+  }
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
 
@@ -107,10 +131,24 @@ export function SessionComments({ clubId, sessionId }: SessionCommentsProps) {
       {comments.length > 0 ? (
         <div className="space-y-3">
           {comments.map((c) => (
-            <div key={c.id} className="bg-input rounded-[14px] p-3">
+            <div key={c.id} className="bg-input group/comment rounded-[14px] p-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">{c.author}</span>
-                <span className="text-muted-foreground text-xs">{timeAgo(c.created_at)}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground text-xs">{timeAgo(c.created_at)}</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (window.confirm("이 후기를 삭제하시겠습니까?")) {
+                        handleDelete(c.id);
+                      }
+                    }}
+                    disabled={deleting === c.id}
+                    className="text-muted-foreground hover:text-destructive opacity-0 transition-opacity group-hover/comment:opacity-100"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
               </div>
               <p className="text-foreground/80 mt-1 text-sm whitespace-pre-wrap">{c.content}</p>
             </div>

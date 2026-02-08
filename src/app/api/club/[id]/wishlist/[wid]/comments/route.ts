@@ -91,3 +91,41 @@ export async function POST(
 
   return NextResponse.json({ comment }, { status: 201 });
 }
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string; wid: string }> }
+) {
+  const { id: clubId, wid } = await params;
+
+  // 쿠키 검증
+  const cookieClubId = request.cookies.get("club_id")?.value;
+  if (!cookieClubId || cookieClubId !== clubId) {
+    return NextResponse.json({ error: "권한이 없습니다." }, { status: 403 });
+  }
+
+  const { commentId } = await request.json();
+  if (!commentId) {
+    return NextResponse.json({ error: "댓글 ID가 필요합니다." }, { status: 400 });
+  }
+
+  const supabase = createClient();
+
+  // club_id 검증
+  const wishlistBook = await verifyWishlistBook(supabase, wid, clubId);
+  if (!wishlistBook) {
+    return NextResponse.json({ error: "위시리스트를 찾을 수 없습니다." }, { status: 404 });
+  }
+
+  const { error } = await supabase
+    .from("wishlist_comments")
+    .delete()
+    .eq("id", commentId)
+    .eq("wishlist_book_id", wid);
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ success: true });
+}
