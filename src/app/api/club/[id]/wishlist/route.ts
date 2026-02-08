@@ -53,7 +53,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       if (description) updates.description = description;
       if (infoUrl) updates.info_url = infoUrl;
       if (Object.keys(updates).length > 0) {
-        await supabase.from("books").update(updates).eq("id", existing.id).is("info_url", null);
+        await supabase.from("books").update(updates).eq("id", existing.id);
       }
     }
   }
