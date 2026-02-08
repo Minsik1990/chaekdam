@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Settings } from "lucide-react";
@@ -11,7 +12,7 @@ interface ClubHeaderProps {
 }
 
 const tabs = [
-  { label: "갤러리", href: "" },
+  { label: "책장", href: "" },
   { label: "타임라인", href: "/timeline" },
   { label: "프로필", href: "/profile" },
 ];
@@ -30,8 +31,12 @@ export function ClubHeader({ clubId, clubName }: ClubHeaderProps) {
   return (
     <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl">
       {/* 상단 헤더 */}
-      <div className="flex items-center justify-between px-4 py-3">
+      <div className="relative flex items-center justify-between px-4 py-3">
         <h1 className="text-foreground text-lg font-bold">{clubName}</h1>
+        {/* 중앙 로고 */}
+        <Link href="/" className="absolute left-1/2 -translate-x-1/2">
+          <Image src="/logo-header.png" alt="독독" width={80} height={28} className="h-7 w-auto" />
+        </Link>
         <Link
           href={`${basePath}/settings`}
           className="text-muted-foreground hover:bg-muted flex h-9 w-9 items-center justify-center rounded-full transition-colors"

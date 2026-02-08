@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { BookOpen, Calendar, Users, Mic, UserCheck, ImageIcon } from "lucide-react";
+import { BookOpen, Calendar, Users, Mic, ImageIcon } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ClubCoverUploader } from "@/components/features/club-cover-uploader";
@@ -115,13 +115,13 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
         </CardContent>
       </Card>
 
-      {/* 멤버 참여 현황 */}
+      {/* 우리가 함께 읽은 책 */}
       {memberStats.length > 0 && (
         <Card className="rounded-[20px]">
           <CardContent className="pt-6">
             <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold">
-              <UserCheck className="text-primary h-4 w-4" />
-              참여 현황
+              <BookOpen className="text-primary h-4 w-4" />
+              우리가 함께 읽은 책
             </h3>
             <div className="flex flex-wrap gap-2">
               {memberStats.map((m) => (
@@ -132,7 +132,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
                 >
                   {m.name}
                   <span className="bg-primary/10 text-primary inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-xs font-bold">
-                    {m.count}
+                    {m.count}권
                   </span>
                 </Badge>
               ))}
