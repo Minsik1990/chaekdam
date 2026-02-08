@@ -16,7 +16,6 @@ interface WishlistWithBook {
     publisher: string | null;
     cover_image_url: string | null;
     description: string | null;
-    info_url: string | null;
     isbn: string | null;
   } | null;
 }
@@ -32,7 +31,7 @@ export default async function WishlistDetailPage({
   const { data } = await supabase
     .from("wishlist_books")
     .select(
-      "id, club_id, created_at, books(id, title, author, publisher, cover_image_url, description, info_url, isbn)"
+      "id, club_id, created_at, books(id, title, author, publisher, cover_image_url, description, isbn)"
     )
     .eq("id", wid)
     .eq("club_id", clubId)
@@ -83,24 +82,15 @@ export default async function WishlistDetailPage({
           <p className="text-foreground/80 text-sm leading-relaxed break-words whitespace-pre-wrap">
             {book.description}
           </p>
-          {(() => {
-            // info_url의 bookId가 ISBN이면 깨진 URL → 다음 검색으로 대체
-            const fallbackUrl = `https://search.daum.net/search?w=book&q=${encodeURIComponent(book.title)}`;
-            const isBroken =
-              !book.info_url || (book.isbn && book.info_url.includes(`bookId=${book.isbn}`));
-            const href = isBroken ? fallbackUrl : book.info_url!;
-            return (
-              <a
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary mt-2 inline-flex items-center gap-1 text-sm font-medium"
-              >
-                다음에서 전체 소개 보기
-                <ExternalLink className="h-3.5 w-3.5" />
-              </a>
-            );
-          })()}
+          <a
+            href={`https://search.daum.net/search?w=book&q=${encodeURIComponent(book.isbn || book.title)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary mt-2 inline-flex items-center gap-1 text-sm font-medium"
+          >
+            다음에서 전체 소개 보기
+            <ExternalLink className="h-3.5 w-3.5" />
+          </a>
         </div>
       )}
 
