@@ -31,7 +31,11 @@ export const metadata: Metadata = {
     type: "website",
     locale: "ko_KR",
     siteName: "독독",
-    images: [{ url: "/logo.png", width: 1080, height: 1080, alt: "독독" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "독독 — 독서를 두드리다",
+    description: "함께 읽고, 함께 기록하다. 독서 모임 전용 기록 웹앱",
   },
   robots: {
     index: true,
