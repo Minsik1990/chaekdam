@@ -4,7 +4,6 @@ import { BookOpen, ExternalLink } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { DeleteWishlistButton } from "@/components/features/delete-wishlist-button";
 import { WishlistComments } from "@/components/features/wishlist-comments";
-import { ExpandableText } from "@/components/features/expandable-text";
 
 interface WishlistWithBook {
   id: string;
@@ -80,7 +79,9 @@ export default async function WishlistDetailPage({
       {book?.description && (
         <div className="bg-card rounded-[20px] p-4 shadow-sm">
           <h3 className="text-foreground mb-2 text-sm font-semibold">책 소개</h3>
-          <ExpandableText text={book.description} maxLines={4} />
+          <p className="text-foreground/80 text-sm leading-relaxed break-words whitespace-pre-wrap">
+            {book.description}
+          </p>
           {book.info_url && (
             <a
               href={book.info_url}
