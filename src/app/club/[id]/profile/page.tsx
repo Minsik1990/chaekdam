@@ -66,9 +66,10 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
     .map(([name, count]) => ({ name, count }))
     .sort((a, b) => b.count - a.count);
 
-  // 참여자 통계 (참여만, 발제 제외)
+  // 참여자 통계 (참여만, 발제 제외) — 책이 있는 세션만
   const participationCount = new Map<string, number>();
   for (const s of allSessions) {
+    if (!s.book_id) continue;
     const parts = s.participants ?? [];
     for (const p of parts) {
       participationCount.set(p, (participationCount.get(p) ?? 0) + 1);

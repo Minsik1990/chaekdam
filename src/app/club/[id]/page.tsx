@@ -24,6 +24,7 @@ export default async function GalleryPage({ params }: { params: Promise<{ id: st
     .from("club_sessions")
     .select("id, session_number, session_date, presenter, books(title, author, cover_image_url)")
     .eq("club_id", clubId)
+    .not("book_id", "is", null)
     .order("session_date", { ascending: false });
 
   const typedSessions = (sessions ?? []) as unknown as SessionWithBook[];

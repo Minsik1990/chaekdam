@@ -10,6 +10,7 @@ interface SessionWithBook {
   session_date: string;
   presenter: string[] | null;
   participants: string[];
+  content: string | null;
   books: {
     title: string;
     author: string | null;
@@ -29,7 +30,7 @@ export default async function TimelinePage({ params }: { params: Promise<{ id: s
   const { data: sessions } = await supabase
     .from("club_sessions")
     .select(
-      "id, session_number, session_date, presenter, participants, books(title, author, cover_image_url)"
+      "id, session_number, session_date, presenter, participants, content, books(title, author, cover_image_url)"
     )
     .eq("club_id", clubId)
     .order("session_date", { ascending: false });
@@ -81,6 +82,7 @@ export default async function TimelinePage({ params }: { params: Promise<{ id: s
             <div className="flex items-start justify-between gap-2">
               <h3 className="truncate text-sm font-semibold">
                 {session.books?.title ??
+                  session.content?.split("\n")[0] ??
                   `제${dateToMeetingNum.get(session.session_date) ?? 0}회 모임`}
               </h3>
               <span className="bg-secondary text-secondary-foreground flex-shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium">

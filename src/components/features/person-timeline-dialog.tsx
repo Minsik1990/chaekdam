@@ -31,6 +31,7 @@ export function PersonTimelineDialog({
   trigger,
 }: PersonTimelineDialogProps) {
   const isPresenter = role === "presenter";
+  const bookCount = sessions.filter((s) => s.book).length;
 
   return (
     <Dialog>
@@ -38,7 +39,9 @@ export function PersonTimelineDialog({
       <DialogContent className="max-h-[80vh] overflow-y-auto rounded-[20px] sm:max-w-md">
         <DialogTitle className="text-base font-bold">
           {name}님의{" "}
-          {isPresenter ? `발제 기록 (${sessions.length}회)` : `읽은 책 (${sessions.length}권)`}
+          {isPresenter
+            ? `발제 기록 (${sessions.length}회)`
+            : `참여 기록 (${sessions.length}회, ${bookCount}권)`}
         </DialogTitle>
 
         {sessions.length === 0 ? (
@@ -79,7 +82,7 @@ export function PersonTimelineDialog({
                 {/* 세션 정보 */}
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium group-hover:text-green-700">
-                    {s.book?.title ?? "책 미정"}
+                    {s.book?.title ?? "일반 모임"}
                   </p>
                   {s.book?.author && (
                     <p className="text-muted-foreground truncate text-xs">{s.book.author}</p>

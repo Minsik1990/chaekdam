@@ -256,10 +256,6 @@ export function SessionForm({ clubId, initialData, sessionId }: SessionFormProps
     e.preventDefault();
     setError("");
 
-    if (!book) {
-      setError("읽은 책을 선택해주세요.");
-      return;
-    }
     if (!sessionDate) {
       setError("모임 날짜를 입력해주세요.");
       return;
@@ -268,15 +264,17 @@ export function SessionForm({ clubId, initialData, sessionId }: SessionFormProps
     setSaving(true);
     try {
       const payload = {
-        book: {
-          isbn: book.isbn,
-          title: book.title,
-          author: book.author,
-          publisher: book.publisher,
-          coverUrl: book.coverUrl,
-          description: book.description,
-          infoUrl: book.infoUrl,
-        },
+        book: book
+          ? {
+              isbn: book.isbn,
+              title: book.title,
+              author: book.author,
+              publisher: book.publisher,
+              coverUrl: book.coverUrl,
+              description: book.description,
+              infoUrl: book.infoUrl,
+            }
+          : null,
         sessionDate,
         presenter: presenters,
         participants,
@@ -342,7 +340,9 @@ export function SessionForm({ clubId, initialData, sessionId }: SessionFormProps
     >
       {/* 책 선택 */}
       <div className="space-y-2">
-        <Label>읽은 책</Label>
+        <Label>
+          읽은 책 <span className="text-muted-foreground font-normal">(선택)</span>
+        </Label>
         {book ? (
           <div className="bg-input flex items-center gap-3 rounded-[14px] p-3">
             {book.coverUrl ? (
@@ -371,17 +371,22 @@ export function SessionForm({ clubId, initialData, sessionId }: SessionFormProps
             </button>
           </div>
         ) : (
-          <BookSearch
-            onSelect={(b) => setBook(b)}
-            trigger={
-              <button
-                type="button"
-                className="border-border text-muted-foreground hover:bg-muted flex h-12 w-full items-center justify-center gap-2 rounded-[14px] border-2 border-dashed text-sm"
-              >
-                <Plus className="h-4 w-4" />책 검색하기
-              </button>
-            }
-          />
+          <div className="space-y-2">
+            <BookSearch
+              onSelect={(b) => setBook(b)}
+              trigger={
+                <button
+                  type="button"
+                  className="border-border text-muted-foreground hover:bg-muted flex h-12 w-full items-center justify-center gap-2 rounded-[14px] border-2 border-dashed text-sm"
+                >
+                  <Plus className="h-4 w-4" />책 검색하기
+                </button>
+              }
+            />
+            <p className="text-muted-foreground text-center text-xs">
+              회고, 회의 등 책 없는 모임은 건너뛰어도 됩니다
+            </p>
+          </div>
         )}
       </div>
 
