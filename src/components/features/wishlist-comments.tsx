@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { MessageCircle, Send, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -50,16 +50,6 @@ export function WishlistComments({ clubId, wishlistBookId }: WishlistCommentsPro
   const [deleting, setDeleting] = useState<string | null>(null);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   const [error, setError] = useState("");
-  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // 언마운트 시 타이머 정리
-  useEffect(() => {
-    return () => {
-      if (longPressTimer.current) {
-        clearTimeout(longPressTimer.current);
-      }
-    };
-  }, []);
 
   const loadComments = useCallback(async () => {
     try {
@@ -112,19 +102,6 @@ export function WishlistComments({ clubId, wishlistBookId }: WishlistCommentsPro
     }
   }
 
-  function handleTouchStart(commentId: string) {
-    longPressTimer.current = setTimeout(() => {
-      setDeleteTargetId(commentId);
-    }, 500);
-  }
-
-  function handleTouchEnd() {
-    if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current);
-      longPressTimer.current = null;
-    }
-  }
-
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
@@ -173,14 +150,7 @@ export function WishlistComments({ clubId, wishlistBookId }: WishlistCommentsPro
       {comments.length > 0 ? (
         <div className="space-y-3">
           {comments.map((c) => (
-            <div
-              key={c.id}
-              className="bg-input group/comment rounded-[14px] p-3 select-none"
-              onTouchStart={() => handleTouchStart(c.id)}
-              onTouchEnd={handleTouchEnd}
-              onTouchMove={handleTouchEnd}
-              onContextMenu={(e) => e.preventDefault()}
-            >
+            <div key={c.id} className="bg-input group/comment rounded-[14px] p-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">{c.author}</span>
                 <div className="flex items-center gap-2">
@@ -190,7 +160,7 @@ export function WishlistComments({ clubId, wishlistBookId }: WishlistCommentsPro
                     aria-label="댓글 삭제"
                     onClick={() => setDeleteTargetId(c.id)}
                     disabled={deleting === c.id}
-                    className="text-muted-foreground hover:text-destructive hidden transition-opacity sm:block sm:opacity-0 sm:group-hover/comment:opacity-100"
+                    className="text-muted-foreground hover:text-destructive transition-opacity sm:opacity-0 sm:group-hover/comment:opacity-100"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
