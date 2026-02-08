@@ -14,6 +14,7 @@ interface PresenterStatsSectionProps {
     id: string;
     session_date: string;
     presenter: string[] | null;
+    content?: string | null;
     book?: {
       title: string;
       author: string | null;
@@ -34,7 +35,9 @@ export function PresenterStatsSection({
     for (const s of sessions) {
       for (const p of s.presenter ?? []) {
         if (!map.has(p)) map.set(p, []);
-        map.get(p)!.push({ id: s.id, session_date: s.session_date, book: s.book });
+        map
+          .get(p)!
+          .push({ id: s.id, session_date: s.session_date, content: s.content, book: s.book });
       }
     }
     return map;

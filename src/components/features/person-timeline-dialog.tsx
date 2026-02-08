@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/
 export interface SessionInfo {
   id: string;
   session_date: string;
+  content?: string | null;
   book?: {
     title: string;
     author: string | null;
@@ -79,7 +80,9 @@ export function PersonTimelineDialog({
                 {/* 세션 정보 */}
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium group-hover:text-green-700">
-                    {s.book?.title ?? "일반 모임"}
+                    {s.book?.title ??
+                      s.content?.split("\n").find((line) => line.trim()) ??
+                      "모임 기록"}
                   </p>
                   {s.book?.author && (
                     <p className="text-muted-foreground truncate text-xs">{s.book.author}</p>

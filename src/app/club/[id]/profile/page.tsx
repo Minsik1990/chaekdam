@@ -22,7 +22,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
     supabase
       .from("club_sessions")
       .select(
-        "id, session_date, presenter, participants, book_id, photos, books(title, author, cover_image_url)"
+        "id, session_date, presenter, participants, book_id, photos, content, books(title, author, cover_image_url)"
       )
       .eq("club_id", clubId)
       .order("session_date", { ascending: false }),
@@ -39,6 +39,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
     participants: string[] | null;
     book_id: string | null;
     photos: string[] | null;
+    content: string | null;
     books: { title: string; author: string | null; cover_image_url: string | null } | null;
   }[];
   const memberNames = (membersResult.data ?? []).map((m) => m.name);
@@ -96,6 +97,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
     session_date: s.session_date,
     presenter: s.presenter,
     participants: s.participants,
+    content: s.content,
     book: s.books,
   }));
 
