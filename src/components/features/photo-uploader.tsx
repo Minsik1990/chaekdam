@@ -197,21 +197,18 @@ export function PhotoUploader({ clubId, sessionId, initialPhotos }: PhotoUploade
 
     setError("");
     setUploading(true);
-    setUploadProgress({ current: 0, total: files.length });
 
     try {
-      // 전체 이미지 압축 (1920px, WebP, ~300-500KB)
-      const compressed = await Promise.all(files.map((f) => compressImage(f)));
-
-      // 1장씩 순차 업로드 (Vercel 4.5MB body 제한 대응)
+      // 1장씩 순차 압축 + 업로드 (모바일 메모리 절약 + Vercel 4.5MB body 제한 대응)
       let failCount = 0;
-      for (let i = 0; i < compressed.length; i++) {
-        setUploadProgress({ current: i + 1, total: compressed.length });
-
-        const formData = new FormData();
-        formData.append("photos", compressed[i]);
+      for (let i = 0; i < files.length; i++) {
+        setUploadProgress({ current: i + 1, total: files.length });
 
         try {
+          const compressed = await compressImage(files[i]);
+          const formData = new FormData();
+          formData.append("photos", compressed);
+
           const res = await fetch(`/api/club/${clubId}/sessions/${sessionId}/photos`, {
             method: "POST",
             body: formData,
@@ -288,9 +285,7 @@ export function PhotoUploader({ clubId, sessionId, initialPhotos }: PhotoUploade
             )}
             {uploading && uploadProgress
               ? `${uploadProgress.current}/${uploadProgress.total}장 업로드 중...`
-              : uploading
-                ? "압축 중..."
-                : "사진 추가"}
+              : "사진 추가"}
           </button>
         )}
         <input

@@ -73,6 +73,14 @@ export async function POST(
     .maybeSingle();
 
   const existingPhotos = (session?.photos as string[] | null) ?? [];
+
+  if (existingPhotos.length + uploadedUrls.length > 10) {
+    if (uploadedPaths.length > 0) {
+      await supabase.storage.from("session-photos").remove(uploadedPaths);
+    }
+    return NextResponse.json({ error: "사진은 최대 10장까지 업로드 가능합니다." }, { status: 400 });
+  }
+
   const allPhotos = [...existingPhotos, ...uploadedUrls];
 
   const { error: updateError } = await supabase
