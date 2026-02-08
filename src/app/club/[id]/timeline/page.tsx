@@ -82,7 +82,7 @@ export default async function TimelinePage({ params }: { params: Promise<{ id: s
             <div className="flex items-start justify-between gap-2">
               <h3 className="truncate text-sm font-semibold">
                 {session.books?.title ??
-                  session.content?.split("\n")[0] ??
+                  session.content?.split("\n").find((line) => line.trim()) ??
                   `제${dateToMeetingNum.get(session.session_date) ?? 0}회 모임`}
               </h3>
               <span className="bg-secondary text-secondary-foreground flex-shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium">

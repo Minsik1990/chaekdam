@@ -38,8 +38,8 @@ export default async function GalleryPage({ params }: { params: Promise<{ id: st
     return (
       <EmptyState
         icon={BookOpen}
-        title="아직 기록이 없어요"
-        description="첫 모임 기록을 남겨보세요"
+        title="아직 읽은 책이 없어요"
+        description="모임에서 읽은 책을 기록해보세요"
       />
     );
   }

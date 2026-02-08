@@ -99,6 +99,9 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
     book: s.books,
   }));
 
+  // "우리가 함께 읽은 책" — 책이 있는 세션만
+  const bookSessionsForClient = sessionsForClient.filter((s) => s.book);
+
   // 전체 사진 수집 (최신 세션 먼저 = 갤러리와 동일)
   const allPhotos: { url: string; sessionId: string; sessionOrder: number }[] = [];
   for (let i = 0; i < allSessions.length; i++) {
@@ -158,7 +161,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
       {memberStats.length > 0 && (
         <MemberBooksSection
           memberStats={memberStats}
-          sessions={sessionsForClient}
+          sessions={bookSessionsForClient}
           clubId={clubId}
         />
       )}
