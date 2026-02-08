@@ -43,20 +43,19 @@ export function PersonTimelineDialog({
         {sessions.length === 0 ? (
           <p className="text-muted-foreground py-6 text-center text-sm">기록이 없습니다.</p>
         ) : (
-          <div className="mt-2">
-            {sessions.map((s, i) => (
+          <div className="relative mt-2">
+            {/* 연속 세로선 — 첫 번째 점 중심 ~ 마지막 점 중심 */}
+            <div className="absolute top-[37px] bottom-[37px] left-[12px] w-0.5 bg-indigo-100" />
+
+            {sessions.map((s) => (
               <Link
                 key={s.id}
                 href={`/club/${clubId}/session/${s.id}`}
-                className="group flex gap-3 rounded-[14px] p-2 transition-colors hover:bg-indigo-50/50"
+                className="group relative flex gap-3 rounded-[14px] p-2 transition-colors hover:bg-indigo-50/50"
               >
-                {/* 타임라인 (선 + 점) */}
-                <div className="flex flex-col items-center">
-                  <div className={`w-0.5 flex-1 ${i === 0 ? "bg-transparent" : "bg-indigo-100"}`} />
-                  <div className="bg-primary my-1 h-2.5 w-2.5 shrink-0 rounded-full ring-2 ring-white" />
-                  <div
-                    className={`w-0.5 flex-1 ${i === sessions.length - 1 ? "bg-transparent" : "bg-indigo-100"}`}
-                  />
+                {/* 타임라인 점 — 세로 가운데 정렬 */}
+                <div className="flex w-[14px] shrink-0 items-center justify-center self-stretch">
+                  <div className="bg-primary z-10 h-2.5 w-2.5 rounded-full ring-2 ring-white" />
                 </div>
 
                 {/* 책 표지 */}
