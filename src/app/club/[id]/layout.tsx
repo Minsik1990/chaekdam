@@ -18,7 +18,7 @@ export default async function ClubLayout({
   if (!club) notFound();
 
   return (
-    <div className="bg-background mx-auto min-h-dvh max-w-[480px]">
+    <div className="bg-background mx-auto min-h-dvh max-w-[480px] overflow-x-hidden">
       <ClubHeader clubId={club.id} clubName={club.name} />
       <main className="px-4 pt-4 pb-24">{children}</main>
       <FabButton href={`/club/${club.id}/session/new`} />

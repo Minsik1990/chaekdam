@@ -126,7 +126,7 @@ export function BookSearch({ onSelect, trigger }: BookSearchProps) {
 
             {selectedBook.description && (
               <div className="max-h-[30vh] overflow-y-auto">
-                <p className="text-foreground/80 text-sm leading-relaxed whitespace-pre-wrap">
+                <p className="text-foreground/80 text-sm leading-relaxed break-words whitespace-pre-wrap">
                   {selectedBook.description}
                 </p>
                 {selectedBook.infoUrl && (

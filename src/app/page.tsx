@@ -121,7 +121,7 @@ export default function HomePage() {
                   setClubName(e.target.value);
                   setError("");
                 }}
-                className="h-12 text-center text-lg"
+                className="bg-input h-12 border-0"
                 autoFocus
                 disabled={loading}
               />
@@ -132,7 +132,7 @@ export default function HomePage() {
                   setCode(e.target.value);
                   setError("");
                 }}
-                className="h-12 text-center text-lg"
+                className="bg-input h-12 border-0"
                 disabled={loading}
               />
               {error && <p className="text-destructive text-center text-sm">{error}</p>}

@@ -47,7 +47,7 @@ export function ClubHeader({ clubId, clubName }: ClubHeaderProps) {
         <Link
           href={`${basePath}/settings`}
           aria-label="모임 설정"
-          className="text-muted-foreground hover:bg-muted ml-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors"
+          className="text-muted-foreground hover:bg-muted ml-auto flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors"
         >
           <Settings className="h-5 w-5" />
         </Link>
@@ -61,7 +61,7 @@ export function ClubHeader({ clubId, clubName }: ClubHeaderProps) {
             href={`${basePath}${tab.href}`}
             aria-current={isActive(tab.href) ? "page" : undefined}
             className={cn(
-              "flex-1 py-2.5 text-center text-sm font-medium transition-colors",
+              "flex-1 py-3 text-center text-sm font-medium transition-colors",
               isActive(tab.href)
                 ? "border-primary text-primary border-b-2"
                 : "text-muted-foreground hover:text-foreground"

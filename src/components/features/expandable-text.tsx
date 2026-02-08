@@ -28,7 +28,7 @@ export function ExpandableText({ text, maxLines = 4 }: ExpandableTextProps) {
     <div>
       <p
         ref={ref}
-        className="text-foreground/80 text-sm leading-relaxed whitespace-pre-wrap"
+        className="text-foreground/80 text-sm leading-relaxed break-words whitespace-pre-wrap"
         style={
           !expanded
             ? {
@@ -46,7 +46,7 @@ export function ExpandableText({ text, maxLines = 4 }: ExpandableTextProps) {
         <button
           type="button"
           onClick={() => setExpanded(true)}
-          className="text-primary mt-1 text-sm font-medium"
+          className="text-primary mt-1 py-1 text-sm font-medium"
         >
           더보기
         </button>
@@ -55,7 +55,7 @@ export function ExpandableText({ text, maxLines = 4 }: ExpandableTextProps) {
         <button
           type="button"
           onClick={() => setExpanded(false)}
-          className="text-primary mt-1 text-sm font-medium"
+          className="text-primary mt-1 py-1 text-sm font-medium"
         >
           접기
         </button>

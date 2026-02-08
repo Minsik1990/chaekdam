@@ -52,7 +52,7 @@ export function DeleteWishlistButton({ clubId, wishlistBookId }: DeleteWishlistB
       <button
         type="button"
         onClick={() => setConfirming(true)}
-        className="bg-secondary text-secondary-foreground hover:bg-muted flex h-9 items-center gap-1.5 rounded-[14px] px-3 text-sm font-medium"
+        className="bg-secondary text-secondary-foreground hover:bg-muted flex h-10 items-center gap-1.5 rounded-[14px] px-3 text-sm font-medium"
       >
         <Trash2 className="h-3.5 w-3.5" />
         삭제

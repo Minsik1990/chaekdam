@@ -160,7 +160,7 @@ export default async function SessionDetailPage({
       {session.presentation_text && (
         <div className="bg-card rounded-[20px] p-4 shadow-sm">
           <h3 className="text-foreground mb-2 text-sm font-semibold">발제문</h3>
-          <p className="text-foreground/80 text-sm leading-relaxed whitespace-pre-wrap">
+          <p className="text-foreground/80 text-sm leading-relaxed break-words whitespace-pre-wrap">
             {session.presentation_text}
           </p>
         </div>
@@ -170,7 +170,7 @@ export default async function SessionDetailPage({
       {session.content && (
         <div className="bg-card rounded-[20px] p-4 shadow-sm">
           <h3 className="text-foreground mb-2 text-sm font-semibold">모임 내용</h3>
-          <p className="text-foreground/80 text-sm leading-relaxed whitespace-pre-wrap">
+          <p className="text-foreground/80 text-sm leading-relaxed break-words whitespace-pre-wrap">
             {session.content}
           </p>
         </div>

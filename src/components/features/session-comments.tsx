@@ -160,13 +160,13 @@ export function SessionComments({ clubId, sessionId }: SessionCommentsProps) {
                     aria-label="후기 삭제"
                     onClick={() => setDeleteTargetId(c.id)}
                     disabled={deleting === c.id}
-                    className="text-muted-foreground hover:text-destructive transition-opacity sm:opacity-0 sm:group-hover/comment:opacity-100"
+                    className="text-muted-foreground hover:text-destructive -mr-2 flex h-9 w-9 items-center justify-center rounded-full transition-opacity sm:opacity-0 sm:group-hover/comment:opacity-100"
                   >
-                    <Trash2 className="h-3.5 w-3.5" />
+                    <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
               </div>
-              <p className="text-foreground/80 mt-1 text-sm whitespace-pre-wrap select-text">
+              <p className="text-foreground/80 mt-1 text-sm break-words whitespace-pre-wrap select-text">
                 {c.content}
               </p>
             </div>
@@ -184,7 +184,7 @@ export function SessionComments({ clubId, sessionId }: SessionCommentsProps) {
           placeholder="이름"
           value={author}
           onChange={(e) => setAuthor(e.target.value)}
-          className="bg-input h-10 border-0"
+          className="bg-input h-12 border-0"
           maxLength={20}
         />
         <div className="flex gap-2">
