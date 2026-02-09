@@ -112,14 +112,21 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
   const tagCount = new Map<string, number>();
   const tagSessions = new Map<
     string,
-    { id: string; session_date: string; book: (typeof allSessions)[0]["books"] }[]
+    {
+      id: string;
+      session_date: string;
+      content?: string | null;
+      book: (typeof allSessions)[0]["books"];
+    }[]
   >();
   for (const s of allSessions) {
     const tags = s.tags ?? [];
     for (const tag of tags) {
       tagCount.set(tag, (tagCount.get(tag) ?? 0) + 1);
       if (!tagSessions.has(tag)) tagSessions.set(tag, []);
-      tagSessions.get(tag)!.push({ id: s.id, session_date: s.session_date, book: s.books });
+      tagSessions
+        .get(tag)!
+        .push({ id: s.id, session_date: s.session_date, content: s.content, book: s.books });
     }
   }
   const tagStats = Array.from(tagCount.entries())
@@ -193,11 +200,6 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
         />
       )}
 
-      {/* 태그 통계 */}
-      {tagStats.length > 0 && (
-        <TagStatsSection tagStats={tagStats} tagSessions={tagSessionsMap} clubId={clubId} />
-      )}
-
       {/* 발제 횟수 */}
       {presenterStats.length > 0 && (
         <PresenterStatsSection
@@ -209,6 +211,11 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
 
       {/* 연간 모임 */}
       <YearlyMeetingChart data={yearlyData} />
+
+      {/* 태그 통계 */}
+      {tagStats.length > 0 && (
+        <TagStatsSection tagStats={tagStats} tagSessions={tagSessionsMap} clubId={clubId} />
+      )}
 
       {/* 모임 사진 */}
       <Card className="rounded-[20px]">
