@@ -2,9 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { MessageCircle, ChevronDown } from "lucide-react";
+import { MessageCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 
 interface CommentItem {
   id: string;
@@ -60,15 +59,13 @@ export function CommentFeedSection({ comments, clubId }: CommentFeedSectionProps
           ))}
         </div>
         {hasMore && !showAll && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="mt-2 w-full"
+          <button
+            type="button"
             onClick={() => setShowAll(true)}
+            className="text-primary hover:bg-muted mt-3 w-full rounded-[14px] py-2 text-sm font-medium transition-colors"
           >
-            <ChevronDown className="mr-1 h-4 w-4" />
             더보기 ({comments.length - INITIAL_COUNT}개)
-          </Button>
+          </button>
         )}
       </CardContent>
     </Card>
