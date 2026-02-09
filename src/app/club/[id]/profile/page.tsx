@@ -18,8 +18,8 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
   const { id: clubId } = await params;
   const supabase = createClient();
 
-  // 모임 정보 + 세션(books JOIN) + 멤버 병렬 조회
-  const [clubResult, sessionsResult, membersResult] = await Promise.all([
+  // 모임 정보 + 세션(books JOIN) + 멤버 + 위시리스트(댓글 JOIN) 병렬 조회
+  const [clubResult, sessionsResult, membersResult, wishlistResult] = await Promise.all([
     supabase.from("clubs").select("*").eq("id", clubId).maybeSingle(),
     supabase
       .from("club_sessions")
@@ -29,6 +29,10 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
       .eq("club_id", clubId)
       .order("session_date", { ascending: false }),
     supabase.from("members").select("name").eq("club_id", clubId).order("name"),
+    supabase
+      .from("wishlist_books")
+      .select("id, title, wishlist_comments(id, author, content, created_at)")
+      .eq("club_id", clubId),
   ]);
 
   const club = clubResult.data as Club | null;
@@ -140,16 +144,33 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
     Array.from(tagSessions.entries()).map(([tag, sessions]) => [tag, sessions])
   );
 
-  // 댓글 피드 데이터
-  const allComments = allSessions
-    .flatMap((s) =>
-      (s.session_comments ?? []).map((c) => ({
-        ...c,
-        sessionId: s.id,
-        bookTitle: s.books?.title ?? s.content?.split("\n").find((l) => l.trim()) ?? null,
-      }))
-    )
-    .sort((a, b) => new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime());
+  // 댓글 피드 데이터 (세션 후기 + 위시리스트 댓글 통합)
+  const sessionComments = allSessions.flatMap((s) =>
+    (s.session_comments ?? []).map((c) => ({
+      ...c,
+      type: "session" as const,
+      targetId: s.id,
+      targetTitle: s.books?.title ?? s.content?.split("\n").find((l) => l.trim()) ?? null,
+    }))
+  );
+  const rawWishlist = (wishlistResult.data ?? []) as unknown as {
+    id: string;
+    title: string;
+    wishlist_comments:
+      | { id: string; author: string; content: string; created_at: string | null }[]
+      | null;
+  }[];
+  const wishlistComments = rawWishlist.flatMap((w) =>
+    (w.wishlist_comments ?? []).map((c) => ({
+      ...c,
+      type: "wishlist" as const,
+      targetId: w.id,
+      targetTitle: w.title,
+    }))
+  );
+  const allComments = [...sessionComments, ...wishlistComments].sort(
+    (a, b) => new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime()
+  );
 
   // 전체 사진 수집 (최신 세션 먼저 = 갤러리와 동일)
   const allPhotos: { url: string; sessionId: string; sessionOrder: number }[] = [];
@@ -232,9 +253,6 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
         <TagStatsSection tagStats={tagStats} tagSessions={tagSessionsMap} clubId={clubId} />
       )}
 
-      {/* 댓글 피드 */}
-      {allComments.length > 0 && <CommentFeedSection comments={allComments} clubId={clubId} />}
-
       {/* 모임 사진 */}
       <Card className="rounded-[20px]">
         <CardContent>
@@ -251,6 +269,9 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
           )}
         </CardContent>
       </Card>
+
+      {/* 댓글 피드 (후기 + 댓글 통합) */}
+      {allComments.length > 0 && <CommentFeedSection comments={allComments} clubId={clubId} />}
     </div>
   );
 }

@@ -11,8 +11,9 @@ interface CommentItem {
   author: string;
   content: string;
   created_at: string | null;
-  sessionId: string;
-  bookTitle: string | null;
+  type: "session" | "wishlist";
+  targetId: string;
+  targetTitle: string | null;
 }
 
 interface CommentFeedSectionProps {
@@ -20,7 +21,7 @@ interface CommentFeedSectionProps {
   clubId: string;
 }
 
-const INITIAL_COUNT = 10;
+const INITIAL_COUNT = 2;
 
 export function CommentFeedSection({ comments, clubId }: CommentFeedSectionProps) {
   const [showAll, setShowAll] = useState(false);
@@ -42,10 +43,14 @@ export function CommentFeedSection({ comments, clubId }: CommentFeedSectionProps
                 <span className="font-semibold">{c.author}</span>
                 <span className="text-muted-foreground">님이 </span>
                 <Link
-                  href={`/club/${clubId}/session/${c.sessionId}`}
+                  href={
+                    c.type === "session"
+                      ? `/club/${clubId}/session/${c.targetId}`
+                      : `/club/${clubId}/wishlist/${c.targetId}`
+                  }
                   className="text-primary font-medium hover:underline"
                 >
-                  {c.bookTitle ?? "모임 기록"}
+                  {c.targetTitle ?? "모임 기록"}
                 </Link>
                 <span className="text-muted-foreground">에 댓글을 남겼습니다</span>
               </p>
